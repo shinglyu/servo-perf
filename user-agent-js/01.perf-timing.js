@@ -4,6 +4,7 @@ function printTime(name, t){
   //document.getElementById('timing').innerHTML += output + "<br/>";
 }
 window.addEventListener('load', function(){
+  console.log("[PERF] Timing for " + window.location)
   printTime("navigationStart", performance.timing.navigationStart);
   printTime("unloadEventStart", performance.timing.unloadEventStart);
   printTime("unloadEventEnd", performance.timing.unloadEventEnd);
