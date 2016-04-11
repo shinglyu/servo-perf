@@ -4,7 +4,8 @@ function printTime(name, t){
   //document.getElementById('timing').innerHTML += output + "<br/>";
 }
 window.addEventListener('load', function(){
-  console.log("[PERF] Timing for " + window.location)
+  console.log("[PERF] perf block start")
+  printTime("testcase", window.location);
   printTime("navigationStart", performance.timing.navigationStart);
   printTime("unloadEventStart", performance.timing.unloadEventStart);
   printTime("unloadEventEnd", performance.timing.unloadEventEnd);
@@ -26,4 +27,5 @@ window.addEventListener('load', function(){
   printTime("domComplete", performance.timing.domComplete);
   printTime("loadEventStart", performance.timing.loadEventStart);
   printTime("loadEventEnd", performance.timing.loadEventEnd);
+  console.log("[PERF] perf block end")
 });
