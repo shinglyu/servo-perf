@@ -2,10 +2,11 @@ import os
 import subprocess
 
 # Configurations
-manifest_path = "./page_load_test/tp5o_8000.manifest" # Run prepare_manifest.sh
+manifest_path = "./page_load_test/tp5o_8000.manifest"  # Run prepare_manifest.sh
+
 
 def test_load(url):
-    ua_script_path= "{}/user-agent-js".format(os.getcwd())
+    ua_script_path = "{}/user-agent-js".format(os.getcwd())
     test_cmd = "./servo/servo '{url}' --userscripts {ua} -o {png}".format(
         url=url,
         ua=ua_script_path,
@@ -31,7 +32,7 @@ def parse_log(log):
             blocks.append(block)
             block = []
         elif copy:
-           block.append(line)
+            block.append(line)
 
     def parse_block(block):
         timing = {}
@@ -50,13 +51,16 @@ def parse_log(log):
     # for block in blocks:
     #     timing
 
+
 def parse_manifest(text):
     return filter(lambda x: x != "", map(lambda x: x.strip(), text.splitlines()))
+
 
 def load_manifest(filename):
     with open(filename, 'rb') as f:
         text = f.read()
     return parse_manifest(text)
+
 
 def main():
     # Assume the server is up and running
