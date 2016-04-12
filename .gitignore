@@ -1,5 +1,7 @@
 page_load_test/*
 servo/*
-.ropeporject
+output.png
+
+.ropeproject
 __pycache__/
 *.pyc

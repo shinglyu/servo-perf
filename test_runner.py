@@ -159,3 +159,19 @@ Shutting down the Constellation after generating an output file or exit flag spe
     }]
     result = runner.parse_log(mock_log)
     assert(expected == result)
+
+def test_manifest_loader():
+
+    text = '''
+http://localhost/page_load_test/tp5n/163.com/www.163.com/index.html
+http://localhost/page_load_test/tp5n/56.com/www.56.com/index.html
+
+http://localhost/page_load_test/tp5n/aljazeera.net/aljazeera.net/portal.html
+'''
+    expected = [
+        "http://localhost/page_load_test/tp5n/163.com/www.163.com/index.html",
+        "http://localhost/page_load_test/tp5n/56.com/www.56.com/index.html",
+        "http://localhost/page_load_test/tp5n/aljazeera.net/aljazeera.net/portal.html"
+    ]
+    assert(expected == runner.parse_manifest(text))
+

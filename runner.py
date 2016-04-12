@@ -1,16 +1,19 @@
 import os
-import re
 import subprocess
 
+# Configurations
+manifest_path = "./page_load_test/tp5o_8000.manifest" # Run prepare_manifest.sh
 
 def test_load(url):
     ua_script_path= "{}/user-agent-js".format(os.getcwd())
-    test_cmd = "./servo/servo {url} --userscripts {ua} -o {png}".format(
+    test_cmd = "./servo/servo '{url}' --userscripts {ua} -o {png}".format(
         url=url,
         ua=ua_script_path,
         png="output.png"
     )
 
+    print("Running test:")
+    print(test_cmd)
     log = subprocess.check_output(test_cmd, stderr=subprocess.STDOUT, shell=True)
     return log
 
@@ -47,16 +50,21 @@ def parse_log(log):
     # for block in blocks:
     #     timing
 
+def parse_manifest(text):
+    return filter(lambda x: x != "", map(lambda x: x.strip(), text.splitlines()))
+
+def load_manifest(filename):
+    with open(filename, 'rb') as f:
+        text = f.read()
+    return parse_manifest(text)
 
 def main():
     # Assume the server is up and running
-    testcases = [
-        'http://localhost:8000/page_load_test/56.com/www.56.com/index.html'
-    ]
+    testcases = load_manifest(manifest_path)
     for testcase in testcases:
         log = test_load(testcase)
         result = parse_log(log)
-
+        print(result)
     print(result)
 
 if __name__ == "__main__":
