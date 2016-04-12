@@ -1,8 +1,12 @@
+import datetime
+import json
 import os
 import subprocess
 
-# Configurations
+# Configurations: should be extracted as commandline parameters
 manifest_path = "./page_load_test/tp5o_8000.manifest"  # Run prepare_manifest.sh
+#manifest_path = "./page_load_test/test.manifest"  # Run prepare_manifest.sh
+output_path = "./output/perf-{:%Y%m%d-%H%M%S}.json".format(datetime.datetime.now())
 
 
 def test_load(url):
@@ -62,14 +66,28 @@ def load_manifest(filename):
     return parse_manifest(text)
 
 
+def save_result_json(results, filename):
+    with open(filename, 'wb') as f:
+        json.dump(results, f, indent=2)
+    print("Result saved to {}".format(filename))
+
+
 def main():
-    # Assume the server is up and running
-    testcases = load_manifest(manifest_path)
-    for testcase in testcases:
-        log = test_load(testcase)
-        result = parse_log(log)
-        print(result)
-    print(result)
+    try:
+        # Assume the server is up and running
+        testcases = load_manifest(manifest_path)
+        results = []
+        for testcase in testcases:
+            log = test_load(testcase)
+            result = parse_log(log)
+            #results.append(result)
+            results += result
+            print(log)
+        save_result_json(results, output_path)
+    except KeyboardInterrupt:
+        print("Test stopped by user, saving partial result")
+        save_result_json(results, output_path)
+
 
 if __name__ == "__main__":
     main()
