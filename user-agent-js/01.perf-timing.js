@@ -1,31 +1,33 @@
-function printTime(name, t){
+function formatLine(name, t){
   var output = "[PERF]," + name + "," + t;
   console.log(output);
   //document.getElementById('timing').innerHTML += output + "<br/>";
 }
-window.addEventListener('load', function(){
+
+function printPerfTiming(){
   console.log("[PERF] perf block start")
-  printTime("testcase", window.location);
-  printTime("navigationStart", performance.timing.navigationStart);
-  printTime("unloadEventStart", performance.timing.unloadEventStart);
-  printTime("unloadEventEnd", performance.timing.unloadEventEnd);
-  printTime("redirectStart", performance.timing.redirectStart);
-  printTime("redirectEnd", performance.timing.redirectEnd);
-  printTime("fetchStart", performance.timing.fetchStart);
-  printTime("domainLookupStart", performance.timing.domainLookupStart);
-  printTime("domainLookupEnd", performance.timing.domainLookupEnd);
-  printTime("connectStart", performance.timing.connectStart);
-  printTime("connectEnd", performance.timing.connectEnd);
-  printTime("secureConnectionStart", performance.timing.secureConnectionStart);
-  printTime("requestStart", performance.timing.requestStart);
-  printTime("responseStart", performance.timing.responseStart);
-  printTime("responseEnd", performance.timing.responseEnd);
-  printTime("domLoading", performance.timing.domLoading);
-  printTime("domInteractive", performance.timing.domInteractive);
-  printTime("domContentLoadedEventStart", performance.timing.domContentLoadedEventStart);
-  printTime("domContentLoadedEventEnd", performance.timing.domContentLoadedEventEnd);
-  printTime("domComplete", performance.timing.domComplete);
-  printTime("loadEventStart", performance.timing.loadEventStart);
-  printTime("loadEventEnd", performance.timing.loadEventEnd);
+  formatLine("testcase", window.location);
+  formatLine("navigationStart", performance.timing.navigationStart);
+  formatLine("unloadEventStart", performance.timing.unloadEventStart);
+  formatLine("unloadEventEnd", performance.timing.unloadEventEnd);
+  formatLine("redirectStart", performance.timing.redirectStart);
+  formatLine("redirectEnd", performance.timing.redirectEnd);
+  formatLine("fetchStart", performance.timing.fetchStart);
+  formatLine("domainLookupStart", performance.timing.domainLookupStart);
+  formatLine("domainLookupEnd", performance.timing.domainLookupEnd);
+  formatLine("connectStart", performance.timing.connectStart);
+  formatLine("connectEnd", performance.timing.connectEnd);
+  formatLine("secureConnectionStart", performance.timing.secureConnectionStart);
+  formatLine("requestStart", performance.timing.requestStart);
+  formatLine("responseStart", performance.timing.responseStart);
+  formatLine("responseEnd", performance.timing.responseEnd);
+  formatLine("domLoading", performance.timing.domLoading);
+  formatLine("domInteractive", performance.timing.domInteractive);
+  formatLine("domContentLoadedEventStart", performance.timing.domContentLoadedEventStart);
+  formatLine("domContentLoadedEventEnd", performance.timing.domContentLoadedEventEnd);
+  formatLine("domComplete", performance.timing.domComplete);
+  formatLine("loadEventStart", performance.timing.loadEventStart);
+  formatLine("loadEventEnd", performance.timing.loadEventEnd);
   console.log("[PERF] perf block end")
-});
+}
+window.addEventListener('load', printPerfTiming);

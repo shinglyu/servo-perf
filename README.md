@@ -9,7 +9,7 @@ Servo Page Load Time Test
 * Run `prepare_manifest.sh` to tranform the tp5n manifest to our format
 * Compile release build
 * Put your `servo` binary and `resources` folder in `servo/`
-* Run `test_all.sh`
+* Run `test_all.sh <path/to/test.manifest>`
 
 # TODO
 * Build a python test runner

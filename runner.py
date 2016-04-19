@@ -2,16 +2,31 @@ import datetime
 import json
 import os
 import subprocess
+import sys
 
 # Configurations: should be extracted as commandline parameters
-manifest_path = "./page_load_test/tp5o_8000.manifest"  # Run prepare_manifest.sh
+# manifest_path = "./page_load_test/tp5o_8000.manifest"  # Run prepare_manifest.sh
+# manifest_path = "./page_load_test/temp.manifest"  # Run prepare_manifest.sh
+# TODO: use argparse instead of sys.argv
+manifest_path = sys.argv[1]
 #manifest_path = "./page_load_test/test.manifest"  # Run prepare_manifest.sh
 output_path = "./output/perf-{:%Y%m%d-%H%M%S}.json".format(datetime.datetime.now())
 
 
+
+def load_manifest(filename):
+    with open(filename, 'rb') as f:
+        text = f.read()
+    return parse_manifest(text)
+
+
+def parse_manifest(text):
+    return filter(lambda x: x != "", map(lambda x: x.strip(), text.splitlines()))
+
+
 def test_load(url):
     ua_script_path = "{}/user-agent-js".format(os.getcwd())
-    test_cmd = "./servo/servo '{url}' --userscripts {ua} -o {png}".format(
+    test_cmd = "./servo/servo '{url}' --userscripts {ua} -x -o {png}".format(
         url=url,
         ua=ua_script_path,
         png="output.png"
@@ -19,7 +34,12 @@ def test_load(url):
 
     print("Running test:")
     print(test_cmd)
-    log = subprocess.check_output(test_cmd, stderr=subprocess.STDOUT, shell=True)
+    try:
+        log = subprocess.check_output(test_cmd, stderr=subprocess.STDOUT, shell=True)
+    except subprocess.CalledProcessError as e:
+        print("Unexpected Fail:")
+        print(e)
+        print("You man want to re-run the test manually:\n{}".format(test_cmd))
     return log
 
 
@@ -54,16 +74,6 @@ def parse_log(log):
     return timings
     # for block in blocks:
     #     timing
-
-
-def parse_manifest(text):
-    return filter(lambda x: x != "", map(lambda x: x.strip(), text.splitlines()))
-
-
-def load_manifest(filename):
-    with open(filename, 'rb') as f:
-        text = f.read()
-    return parse_manifest(text)
 
 
 def save_result_json(results, filename):
