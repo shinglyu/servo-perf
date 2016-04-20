@@ -1,19 +1,45 @@
+
+import argparse
+import json
+import random
+import string
 from thclient import (TreeherderClient, TreeherderClientError,
                       TreeherderResultSetCollection, TreeherderJobCollection)
-
 import time
-import string
-import random
+
+def format_perf_data(perf_json):
+    suites = []
+    for testcase in perf_json:
+        suite = {
+            "name": testcase["testcase"],
+            "value": testcase["domComplete"],
+            "subtests":[]
+        }
+        for key, value in testcase.iteritems():
+            if key == "testcase":
+                continue
+            if value is None:
+                value = -1
+            suite["subtests"].append({"name": key, "value": value})
+        suites.append(suite)
+
+    return (
+        {
+            "performance_data": {
+                "framework": {"name": "talos"},
+                "suites": suites
+            }
+        }
+    )
 
 # TODO: refactor this big function to smaller chunks
-def main():
+def submit(perf_data):
     # TODO: load the last commit json and populate the result set
     # TODO: what should the timestamp be?
     push_timestamp = int(time.time())
     hashlen = len('8888637cb9f78f19cb8463ff174e81756805d8cf')
     revision_id = ''.join(random.choice(string.letters + string.digits) for i in xrange(hashlen))
     job_guid = ''.join(random.choice(string.letters + string.digits) for i in xrange(hashlen))
-    author =
 
     trsc = TreeherderResultSetCollection()
 
@@ -129,21 +155,23 @@ def main():
                         'type': 'json',
                         'name': 'performance_data',
                         #'job_guid': job_guid,
-                        'blob': {
-                            "performance_data": {
-                                # TODO: can we create a framwork on treeherder
-                                # that is not `talos`?
-                                "framework": {"name": "talos"},
-                                "suites": [{
-                                    "name": "performance.timing.domComplete",
-                                    "value": random.choice(range(15,25)),
-                                    "subtests": [
-                                        {"name": "responseEnd", "value": random.choice(range(5,15))},
-                                        {"name": "loadEventEnd", "value": random.choice(range(25,29))}
-                                    ]
-                                }]
-                            }
-                        }
+                        'blob': perf_data
+                        #{
+
+                            #"performance_data": {
+                            ##    # TODO: can we create a framwork on treeherder
+                            #    # that is not `talos`?
+                            #    "framework": {"name": "talos"},
+                            #    "suites": [{
+                            #        "name": "performance.timing.domComplete",
+                            #        "value": random.choice(range(15,25)),
+                            #        "subtests": [
+                            #            {"name": "responseEnd", "value": random.choice(range(5,15))},
+                            #            {"name": "loadEventEnd", "value": random.choice(range(25,29))}
+                            #        ]
+                            #    }]
+                            #}
+                        #}
                     },
                     {
                         'type': 'json',
@@ -231,6 +259,20 @@ def main():
 # data structure validation is automatically performed here, if validation
 # fails a TreeherderClientError is raised
     client.post_collection('servo', tjc)
+
+def main():
+    parser = argparse.ArgumentParser(description="Submit Servo performance data to Perfherder")
+    parser.add_argument("json_file", help="the output json from runner")
+    args = parser.parse_args()
+
+    with open(args.json_file, 'rb') as f:
+        result_json = json.load(f)
+
+    perf_data = format_perf_data(result_json)
+
+    submit(perf_data)
+    print "Done!"
+
 
 if __name__ == "__main__":
     main()
