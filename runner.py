@@ -1,9 +1,8 @@
 import argparse
-import datetime
+import itertools
 import json
 import os
 import subprocess
-import sys
 
 # Configurations: should be extracted as commandline parameters
 # manifest_path = "./page_load_test/tp5o_8000.manifest"  # Run prepare_manifest.sh
@@ -75,7 +74,41 @@ def parse_log(log):
     #     timing
 
 
-def save_result_json(results, filename):
+def filter_result_by_manifest(result_json, manifest):
+    return [tc for tc in result_json if tc['testcase'] in manifest]
+
+def median(lst):
+    lst = sorted(lst)
+    if len(lst) < 1:
+        return None
+    if len(lst) %2 == 1:
+        return lst[((len(lst)+1)/2)-1]
+    else:
+        return float(sum(lst[(len(lst)/2)-1:(len(lst)/2)+1]))/2.0
+
+def take_result_median(result_json, expected_runs):
+    median_results = []
+    for k, g in itertools.groupby(result_json, lambda x: x['testcase']):
+        group = list(g)
+        if len(group) != expected_runs:
+            print("Warning: Not enough test data for {}, maybe some runs failed?").format(k)
+            # continue
+
+        median_result = {}
+        for k, _ in group[0].iteritems():
+            if k == "testcase":
+                median_result[k] = group[0][k]
+            else:
+                median_result[k] = median(filter(lambda x: x is not None,map(lambda x: x[k], group)))
+        median_results.append(median_result)
+    return median_results
+
+
+def save_result_json(results, filename, manifest, expected_runs):
+
+    results = filter_result_by_manifest(results, manifest)
+    results = take_result_median(results, expected_runs)
+
     with open(filename, 'wb') as f:
         json.dump(results, f, indent=2)
     print("Result saved to {}".format(filename))
@@ -89,6 +122,10 @@ def main():
                         help="the test manifest in tp5 format")
     parser.add_argument("output_file",
                         help="filename for the output json")
+    parser.add_argument("--runs",
+                        type=int,
+                        default=20,
+                        help="number of runs for each test case")
     args = parser.parse_args()
 
     try:
@@ -96,16 +133,21 @@ def main():
         testcases = load_manifest(args.tp5_manifest)
         results = []
         for testcase in testcases:
-            log = test_load(testcase)
-            result = parse_log(log)
-            #results.append(result)
-            results += result
-            print(log)
-        save_result_json(results, args.output_file)
+            for run in range(args.runs):
+                print("Running test {}/{} on {}".format(run + 1,
+                                                        args.runs,
+                                                        testcase))
+                log = test_load(testcase)
+                result = parse_log(log)
+                #results.append(result)
+                results += result
+                # print(log)
+
+        save_result_json(results, args.output_file, testcases, args.runs)
 
     except KeyboardInterrupt:
         print("Test stopped by user, saving partial result")
-        save_result_json(results, args.output_file)
+        save_result_json(results, args.output_file, testcases, args.runs)
 
 
 if __name__ == "__main__":

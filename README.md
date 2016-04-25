@@ -11,7 +11,10 @@ Servo Page Load Time Test
 * Put your `servo` binary and `resources` folder in `servo/`
 * Run `test_all.sh <path/to/test.manifest>`
 
+# How it works
+* The testcase is from tp5, every testcase will run 20 times, and we take the median.
+* Each testcase is a subtest on Perfherder, and their summary time is the geometric mean of all the subtests.
+
 # TODO
-* Build a python test runner
-* Run tp5
+* Check which tp5 test runs forever
 * Report to perfherder
