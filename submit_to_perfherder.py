@@ -252,7 +252,8 @@ def submit(perf_data, revision):
             )
         tjc.add(tj)
 
-    client = TreeherderClient(protocol='https',
+    # TODO: switch to https when on perduction
+    client = TreeherderClient(protocol='http',
                               host='local.treeherder.mozilla.org',
                               client_id='slyu',
                               secret='d19f6e2d-2ec1-43c4-99ff-a77e99717de7')

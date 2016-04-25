@@ -1,3 +1,4 @@
+import argparse
 import datetime
 import json
 import os
@@ -7,10 +8,8 @@ import sys
 # Configurations: should be extracted as commandline parameters
 # manifest_path = "./page_load_test/tp5o_8000.manifest"  # Run prepare_manifest.sh
 # manifest_path = "./page_load_test/temp.manifest"  # Run prepare_manifest.sh
-# TODO: use argparse instead of sys.argv
-manifest_path = sys.argv[1]
-#manifest_path = "./page_load_test/test.manifest"  # Run prepare_manifest.sh
-output_path = "./output/perf-{:%Y%m%d-%H%M%S}.json".format(datetime.datetime.now())
+# manifest_path = "./page_load_test/test.manifest"  # Run prepare_manifest.sh
+# output_path = "./output/perf-{:%Y%m%d-%H%M%S}.json".format(datetime.datetime.now())
 
 
 
@@ -83,9 +82,18 @@ def save_result_json(results, filename):
 
 
 def main():
+    parser = argparse.ArgumentParser(
+        description="Run page load test on servo"
+    )
+    parser.add_argument("tp5_manifest",
+                        help="the test manifest in tp5 format")
+    parser.add_argument("output_file",
+                        help="filename for the output json")
+    args = parser.parse_args()
+
     try:
         # Assume the server is up and running
-        testcases = load_manifest(manifest_path)
+        testcases = load_manifest(args.tp5_manifest)
         results = []
         for testcase in testcases:
             log = test_load(testcase)
@@ -93,10 +101,11 @@ def main():
             #results.append(result)
             results += result
             print(log)
-        save_result_json(results, output_path)
+        save_result_json(results, args.output_file)
+
     except KeyboardInterrupt:
         print("Test stopped by user, saving partial result")
-        save_result_json(results, output_path)
+        save_result_json(results, args.output_file)
 
 
 if __name__ == "__main__":
