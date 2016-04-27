@@ -1,4 +1,5 @@
 import argparse
+from functools import partial
 import json
 import operator
 import random
@@ -14,14 +15,20 @@ def geometric_mean(iterable):
 def format_perf_data(perf_json):
     suites = []
     measurement = "domComplete"  # Change this to an array when we have mem test
+    def getTimeFromNavStart(timings, measurement):
+        # navigationStart has lower percision
+        return timings[measurement] - timings['navigationStart'] * 1000
+
+    measurementFromNavStart = partial(getTimeFromNavStart, measurement=measurement)
+
     suite = {
         "name": measurement,
-        "value": geometric_mean(map(lambda x: x["domComplete"], perf_json)),
+        "value": geometric_mean(map(measurementFromNavStart, perf_json)),
         "subtests": []
     }
     for testcase in perf_json:
         suite["subtests"].append({"name": testcase["testcase"],
-                                  "value": testcase["domComplete"]})
+                                  "value": measurementFromNavStart(testcase)})
 
     suites.append(suite)
 

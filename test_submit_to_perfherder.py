@@ -60,12 +60,12 @@ def test_format_perf_data():
             "suites": [
                 {
                     "name": "domComplete",
-                    "value": 1460444939500.0,
+                    "value": 3741.657386773941,
                     "subtests": [
                         {"name":"about:blank",
-                         "value": 1460444931000},
+                         "value": 1000},
                         {"name": "http://localhost:8000/page_load_test/163.com/p.mail.163.com/mailinfo/shownewmsg_www_1222.htm.html",
-                         "value": 1460444948000},
+                         "value": 14000},
                     ]
                 }
             ]
