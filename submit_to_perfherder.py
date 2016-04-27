@@ -7,6 +7,7 @@ import string
 from thclient import (TreeherderClient, TreeherderResultSetCollection,
                       TreeherderJobCollection)
 
+TREEHERDER_SECRET = "b211ed25-4f64-4ece-81b9-11117e539786"
 
 def geometric_mean(iterable):
         return (reduce(operator.mul, iterable)) ** (1.0/len(iterable))
@@ -263,7 +264,7 @@ def submit(perf_data, revision):
     client = TreeherderClient(protocol='http',
                               host='local.treeherder.mozilla.org',
                               client_id='slyu',
-                              secret='d19f6e2d-2ec1-43c4-99ff-a77e99717de7')
+                              secret=TREEHERDER_SECRET)
 
     # data structure validation is automatically performed here, if validation
     # fails a TreeherderClientError is raised
