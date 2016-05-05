@@ -7,7 +7,6 @@ import string
 from thclient import (TreeherderClient, TreeherderResultSetCollection,
                       TreeherderJobCollection)
 
-TREEHERDER_SECRET = "b211ed25-4f64-4ece-81b9-11117e539786"
 
 def geometric_mean(iterable):
         return (reduce(operator.mul, iterable)) ** (1.0/len(iterable))
@@ -17,8 +16,7 @@ def format_perf_data(perf_json):
     suites = []
     measurement = "domComplete"  # Change this to an array when we have mem test
     def getTimeFromNavStart(timings, measurement):
-        # navigationStart has lower percision
-        return timings[measurement] - timings['navigationStart'] * 1000
+        return timings[measurement] - timings['navigationStart']
 
     measurementFromNavStart = partial(getTimeFromNavStart, measurement=measurement)
 
@@ -260,11 +258,15 @@ def submit(perf_data, revision):
             )
         tjc.add(tj)
 
-    # TODO: switch to https when on perduction
-    client = TreeherderClient(protocol='http',
-                              host='local.treeherder.mozilla.org',
-                              client_id='slyu',
-                              secret=TREEHERDER_SECRET)
+    # TODO: extract this read credential code out of this function.
+    with open('credential.json', 'rb') as f:
+        cred = json.load(f)
+
+    client = TreeherderClient(protocol='https',
+                              # host='local.treeherder.mozilla.org',
+                              host='treeherder.allizom.org',
+                              client_id=cred['client_id'],
+                              secret=cred['secret'])
 
     # data structure validation is automatically performed here, if validation
     # fails a TreeherderClientError is raised
@@ -274,7 +276,7 @@ def submit(perf_data, revision):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Submit Servo performance data to Perfherder"
+        description="Submit Servo performance data to Perfherder. Put your treeherder credentail in credentail.json. You can refer to credential.json.example."
     )
     parser.add_argument("perf_json",
                         help="the output json from runner")
