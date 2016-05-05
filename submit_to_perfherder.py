@@ -9,7 +9,15 @@ from thclient import (TreeherderClient, TreeherderResultSetCollection,
 
 
 def geometric_mean(iterable):
+        iterable = filter(lambda x: x > 0, iterable)
         return (reduce(operator.mul, iterable)) ** (1.0/len(iterable))
+
+
+def format_testcase_name(name):
+    temp = name.replace('http://localhost:8000/page_load_test/', '')
+    temp = temp.split('/')[0]
+    temp = temp[0:80]
+    return temp
 
 
 def format_perf_data(perf_json):
@@ -26,8 +34,15 @@ def format_perf_data(perf_json):
         "subtests": []
     }
     for testcase in perf_json:
-        suite["subtests"].append({"name": testcase["testcase"],
-                                  "value": measurementFromNavStart(testcase)})
+        if measurementFromNavStart(testcase) < 0:
+            value = -1
+            print('Error: test case has negative timing. Perhaps the test timed out?')
+        else:
+            value = measurementFromNavStart(testcase)
+
+        value = measurementFromNavStart(testcase) if measurementFromNavStart(testcase) > 0 else -1
+        suite["subtests"].append({"name": format_testcase_name(testcase["testcase"]),
+                                  "value": value})
 
     suites.append(suite)
 
