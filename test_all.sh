@@ -1,10 +1,17 @@
-#!/bin/bash
+#!/bin/bash -e
+export DISPLAY=:0 # In servo-linux1
+
+source venv/bin/activate
+
+echo "Staring the local server"
 python -m SimpleHTTPServer > /dev/null 2>&1 &
 
 MANIFEST="page_load_test/test.manifest"
 PERF_FILE="output/perf-$(date +"%s").json"
 
+echo "Running tests"
 python runner.py --runs 3 $MANIFEST $PERF_FILE 
+echo "Submitting to Perfherder"
 python submit_to_perfherder.py $PERF_FILE servo/revision.json
 
 # Kill the http server

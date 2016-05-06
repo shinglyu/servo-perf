@@ -33,6 +33,10 @@ Servo Page Load Time Test
 * The testcase is from tp5, every testcase will run 20 times, and we take the median.
 * Each testcase is a subtest on Perfherder, and their summary time is the geometric mean of all the subtests.
 
+# Running in buildbot
+* We have a `master.cfg` for you to run it in buildbot. You can use the `servo-linux1` vagrant VM setup from [servo/saltfs](https://github.com/servo/saltfs) to run it.
+* You'll need to setup this repository manully in the VM, check the inline comments in `master.cfg` for detail.
+
 # TODO
 * Check which tp5 test runs forever
 * Report to perfherder

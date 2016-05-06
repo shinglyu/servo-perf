@@ -58,6 +58,9 @@ def format_perf_data(perf_json):
 
 # TODO: refactor this big function to smaller chunks
 def submit(perf_data, revision):
+
+    print("[DEBUG] performance data:")
+    print(perf_data)
     # TODO: load the last commit json and populate the result set
     # TODO: read the correct guid from test result
     hashlen = len(revision['commit'])
