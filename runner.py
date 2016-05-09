@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 import argparse
 import itertools
 import json
@@ -13,18 +14,23 @@ import subprocess
 
 
 def load_manifest(filename):
-    with open(filename, 'rb') as f:
+    with open(filename, 'r') as f:
         text = f.read()
-    return parse_manifest(text)
+    return list(parse_manifest(text))
 
 
 def parse_manifest(text):
-    return filter(lambda x: x != "", map(lambda x: x.strip(), text.splitlines()))
+    return filter(lambda x: x != "" and not x.startswith("#"),
+                  map(lambda x: x.strip(),
+                      text.splitlines()
+                     )
+                 )
 
 
-def test_load(url):
+def test_load(url, timeout):
     ua_script_path = "{}/user-agent-js".format(os.getcwd())
-    test_cmd = "./servo/servo '{url}' --userscripts {ua} -x -o {png}".format(
+    test_cmd = "timeout {timeout}s ./servo/servo '{url}' --userscripts {ua} -x -o {png}".format(
+        timeout=timeout,
         url=url,
         ua=ua_script_path,
         png="output.png"
@@ -32,12 +38,19 @@ def test_load(url):
 
     print("Running test:")
     print(test_cmd)
+    print("Timeout:{}".format(timeout))
+    log = ""
     try:
-        log = subprocess.check_output(test_cmd, stderr=subprocess.STDOUT, shell=True)
+        log = subprocess.check_output(test_cmd, stderr=subprocess.STDOUT,
+                                      shell=True, timeout=timeout) # timeout in sec
+        # print(log)
     except subprocess.CalledProcessError as e:
         print("Unexpected Fail:")
         print(e)
         print("You man want to re-run the test manually:\n{}".format(test_cmd))
+    except subprocess.TimeoutExpired:
+        print("Test timeout: {}".format(url))
+
     return log
 
 
@@ -46,7 +59,10 @@ def parse_log(log):
     blocks = []
     block = []
     copy = False
-    for line in log.splitlines():
+    for line_bytes in log.splitlines():
+        # print(line)
+        line = line_bytes.decode()
+
         if line.strip() == ("[PERF] perf block start"):
             copy = True
         elif line.strip() == ("[PERF] perf block end"):
@@ -68,6 +84,8 @@ def parse_log(log):
                 timing[key] = None if (value == "undefined") else int(value)
         return timing
 
+    if len(blocks) == 0:
+        print("Didn't find any performance data in the log, perhaps the test timed out?")
     timings = map(parse_block, blocks)
     return timings
     # for block in blocks:
@@ -75,16 +93,20 @@ def parse_log(log):
 
 
 def filter_result_by_manifest(result_json, manifest):
+    print(manifest)
+    print(result_json)
     return [tc for tc in result_json if tc['testcase'] in manifest]
+
 
 def median(lst):
     lst = sorted(lst)
     if len(lst) < 1:
         return None
     if len(lst) %2 == 1:
-        return lst[((len(lst)+1)/2)-1]
+        return lst[int(((len(lst)+1)/2)-1)]
     else:
-        return float(sum(lst[(len(lst)/2)-1:(len(lst)/2)+1]))/2.0
+        return float(sum(lst[int((len(lst)/2)-1):int((len(lst)/2)+1)]))/2.0
+
 
 def take_result_median(result_json, expected_runs):
     median_results = []
@@ -95,7 +117,7 @@ def take_result_median(result_json, expected_runs):
             # continue
 
         median_result = {}
-        for k, _ in group[0].iteritems():
+        for k, _ in group[0].items():
             if k == "testcase":
                 median_result[k] = group[0][k]
             else:
@@ -106,11 +128,19 @@ def take_result_median(result_json, expected_runs):
 
 def save_result_json(results, filename, manifest, expected_runs):
 
+    print(results)
     results = filter_result_by_manifest(results, manifest)
+    print(results)
     results = take_result_median(results, expected_runs)
+    print(results)
 
-    with open(filename, 'wb') as f:
-        json.dump(results, f, indent=2)
+    if len(results) == 0:
+        with open(filename, 'w') as f:
+            json.dump("No test result found in the log. Perhaps the tests all timed out?",
+                      f, indent=2)
+    else:
+        with open(filename, 'w') as f:
+            json.dump(results, f, indent=2)
     print("Result saved to {}".format(filename))
 
 
@@ -125,7 +155,11 @@ def main():
     parser.add_argument("--runs",
                         type=int,
                         default=20,
-                        help="number of runs for each test case")
+                        help="number of runs for each test case. Defult: 20")
+    parser.add_argument("--timeout",
+                        type=int,
+                        default=300, # 5 min
+                        help="force kill the test if not finished in time (sec). Default: 5 min")
     args = parser.parse_args()
 
     try:
@@ -137,7 +171,7 @@ def main():
                 print("Running test {}/{} on {}".format(run + 1,
                                                         args.runs,
                                                         testcase))
-                log = test_load(testcase)
+                log = test_load(testcase, args.timeout)
                 result = parse_log(log)
                 #results.append(result)
                 results += result

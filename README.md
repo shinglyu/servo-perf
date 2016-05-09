@@ -37,6 +37,9 @@ Servo Page Load Time Test
 * We have a `master.cfg` for you to run it in buildbot. You can use the `servo-linux1` vagrant VM setup from [servo/saltfs](https://github.com/servo/saltfs) to run it.
 * You'll need to setup this repository manully in the VM, check the inline comments in `master.cfg` for detail.
 
+# Python version
+The `runner.py` needs to be run on Python3.4+ (for the `timeout` in `subprocess`). But the `submit_to_perfherder.py` still runs on Python2. We should migrate everthing to Python3 later.
+
 # TODO
 * Check which tp5 test runs forever
 * Report to perfherder

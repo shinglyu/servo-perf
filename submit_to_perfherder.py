@@ -311,7 +311,7 @@ def main():
     perf_data = format_perf_data(result_json)
 
     submit(perf_data, revision)
-    print "Done!"
+    print("Done!")
 
 
 if __name__ == "__main__":

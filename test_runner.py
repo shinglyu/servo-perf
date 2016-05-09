@@ -2,7 +2,7 @@ import runner
 
 
 def test_log_parser():
-    mock_log = '''
+    mock_log = b'''
 [PERF] perf block start
 [PERF],testcase,http://localhost:8000/page_load_test/56.com/www.56.com/index.html
 [PERF],navigationStart,1460358376
@@ -55,11 +55,11 @@ Shutting down the Constellation after generating an output file or exit flag spe
         "loadEventEnd": None
     }]
     result = runner.parse_log(mock_log)
-    assert(expected == result)
+    assert(expected == list(result))
 
 
 def test_log_parser_complex():
-    mock_log = '''
+    mock_log = b'''
 [PERF] perf block start
 [PERF],testcase,http://localhost:8000/page_load_test/56.com/www.56.com/content.html
 [PERF],navigationStart,1460358300
@@ -160,7 +160,7 @@ Shutting down the Constellation after generating an output file or exit flag spe
         "loadEventEnd": None
     }]
     result = runner.parse_log(mock_log)
-    assert(expected == result)
+    assert(expected == list(result))
 
 
 def test_manifest_loader():
@@ -170,13 +170,14 @@ http://localhost/page_load_test/tp5n/163.com/www.163.com/index.html
 http://localhost/page_load_test/tp5n/56.com/www.56.com/index.html
 
 http://localhost/page_load_test/tp5n/aljazeera.net/aljazeera.net/portal.html
+# Disabled! http://localhost/page_load_test/tp5n/aljazeera.net/aljazeera.net/portal.html
 '''
     expected = [
         "http://localhost/page_load_test/tp5n/163.com/www.163.com/index.html",
         "http://localhost/page_load_test/tp5n/56.com/www.56.com/index.html",
         "http://localhost/page_load_test/tp5n/aljazeera.net/aljazeera.net/portal.html"
     ]
-    assert(expected == runner.parse_manifest(text))
+    assert(expected == list(runner.parse_manifest(text)))
 
 
 def test_filter_result_by_manifest():
