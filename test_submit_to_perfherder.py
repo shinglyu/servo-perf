@@ -1,9 +1,11 @@
 import submit_to_perfherder
 
+
 def test_format_testcase_name():
     assert('about:blank' == submit_to_perfherder.format_testcase_name('about:blank'))
     assert('163.com' == submit_to_perfherder.format_testcase_name('http://localhost:8000/page_load_test/163.com/p.mail.163.com/mailinfo/shownewmsg_www_1222.htm.html'))
     assert('12345678902234567890323456789042345678905234567890623456789072345678908234567890' == submit_to_perfherder.format_testcase_name('123456789022345678903234567890423456789052345678906234567890723456789082345678909234567890'))
+
 
 def test_format_perf_data():
     mock_result = [
@@ -67,7 +69,7 @@ def test_format_perf_data():
                     "name": "domComplete",
                     "value": 3741.657386773941,
                     "subtests": [
-                        {"name":"about:blank",
+                        {"name": "about:blank",
                          "value": 1000},
                         {"name": "163.com",
                          "value": 14000},
@@ -144,6 +146,7 @@ def test_format_perf_data():
     result = submit_to_perfherder.format_perf_data(mock_result)
     assert(expected == result)
 
+
 def test_format_bad_perf_data():
     mock_result = [
         {
@@ -168,8 +171,8 @@ def test_format_bad_perf_data():
                     "name": "domComplete",
                     "value": 14000.0,
                     "subtests": [
-                        {"name":"about:blank",
-                         "value": -1}, # Timeout
+                        {"name": "about:blank",
+                         "value": -1},  # Timeout
                         {"name": "163.com",
                          "value": 14000},
                     ]

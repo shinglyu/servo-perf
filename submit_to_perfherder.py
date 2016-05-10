@@ -22,11 +22,13 @@ def format_testcase_name(name):
 
 def format_perf_data(perf_json):
     suites = []
-    measurement = "domComplete"  # Change this to an array when we have mem test
+    measurement = "domComplete"  # Change this to an array when we have more
+
     def getTimeFromNavStart(timings, measurement):
         return timings[measurement] - timings['navigationStart']
 
-    measurementFromNavStart = partial(getTimeFromNavStart, measurement=measurement)
+    measurementFromNavStart = partial(getTimeFromNavStart,
+                                      measurement=measurement)
 
     suite = {
         "name": measurement,
@@ -36,13 +38,14 @@ def format_perf_data(perf_json):
     for testcase in perf_json:
         if measurementFromNavStart(testcase) < 0:
             value = -1
-            print('Error: test case has negative timing. Perhaps the test timed out?')
+            print('Error: test case has negative timing. Test timeout?')
         else:
             value = measurementFromNavStart(testcase)
 
-        value = measurementFromNavStart(testcase) if measurementFromNavStart(testcase) > 0 else -1
-        suite["subtests"].append({"name": format_testcase_name(testcase["testcase"]),
-                                  "value": value})
+        suite["subtests"].append({
+            "name": format_testcase_name(testcase["testcase"]),
+            "value": value}
+        )
 
     suites.append(suite)
 
@@ -61,7 +64,6 @@ def submit(perf_data, revision):
 
     print("[DEBUG] performance data:")
     print(perf_data)
-    # TODO: load the last commit json and populate the result set
     # TODO: read the correct guid from test result
     hashlen = len(revision['commit'])
     job_guid = ''.join(
@@ -80,8 +82,8 @@ def submit(perf_data, revision):
             'author': author,
             'push_timestamp': int(revision['author']['timestamp']),
             'type': 'push',
-            # a list of revisions associated with the resultset. There should be
-            # at least one.
+            # a list of revisions associated with the resultset. There should
+            # be at least one.
             'revisions': [
                 {
                     'comment': revision['subject'],
@@ -187,25 +189,24 @@ def submit(perf_data, revision):
                         # 'job_guid': job_guid,
                         'blob': perf_data
                         # {
-                            #"performance_data": {
-                            #    # TODO: can we create a framwork on treeherder
-                            #    # that is not `talos`?
-                            #    "framework": {"name": "talos"},
-                            #    "suites": [{
-                            #        "name": "performance.timing.domComplete",
-                            #        "value": random.choice(range(15,25)),
-                            #        "subtests": [
-                            #            {"name": "responseEnd", "value": random.choice(range(5,15))},
-                            #            {"name": "loadEventEnd", "value": random.choice(range(25,29))}
-                            #        ]
-                            #    }]
-                            #}
-                        #}
+                        #    "performance_data": {
+                        #        # that is not `talos`?
+                        #        "framework": {"name": "talos"},
+                        #        "suites": [{
+                        #            "name": "performance.timing.domComplete",
+                        #            "value": random.choice(range(15,25)),
+                        #            "subtests": [
+                        #                {"name": "responseEnd", "value": 123},
+                        #                {"name": "loadEventEnd", "value": 223}
+                        #            ]
+                        #        }]
+                        #     }
+                        # }
                     },
                     {
                         'type': 'json',
                         'name': 'Job Info',
-                        #'job_guid': job_guid,
+                        # 'job_guid': job_guid,
                         "blob": {
                             "job_details": [
                                 {
@@ -294,7 +295,9 @@ def submit(perf_data, revision):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Submit Servo performance data to Perfherder. Put your treeherder credentail in credentail.json. You can refer to credential.json.example."
+        description=("Submit Servo performance data to Perfherder. "
+                     "Put your treeherder credentail in credentail.json. "
+                     "You can refer to credential.json.example.")
     )
     parser.add_argument("perf_json",
                         help="the output json from runner")

@@ -135,7 +135,7 @@ Shutting down the Constellation after generating an output file or exit flag spe
         "domComplete": 1460358389000,
         "loadEventStart": None,
         "loadEventEnd": None
-    },{
+    }, {
         "testcase": "http://localhost:8000/page_load_test/56.com/www.56.com/index.html",
         "navigationStart": 1460358376,
         "unloadEventStart": None,
@@ -184,10 +184,10 @@ def test_filter_result_by_manifest():
     input_json = [{
         "testcase": "http://localhost:8000/page_load_test/56.com/www.56.com/content.html",
         "domComplete": 1460358389000,
-    },{
+    }, {
         "testcase": "non-existing-html",
         "domComplete": 1460358389000,
-    },{
+    }, {
         "testcase": "http://localhost:8000/page_load_test/56.com/www.56.com/index.html",
         "domComplete": 1460358389000,
     }]
@@ -204,16 +204,17 @@ def test_filter_result_by_manifest():
 
     assert(expected == runner.filter_result_by_manifest(input_json, manifest))
 
+
 def test_take_result_median_odd():
     input_json = [{
         "testcase": "http://localhost:8000/page_load_test/56.com/www.56.com/index.html",
         "domComplete": 1460358389001,
         "domLoading": 1460358380002
-    },{
+    }, {
         "testcase": "http://localhost:8000/page_load_test/56.com/www.56.com/index.html",
         "domComplete": 1460358389002,
         "domLoading": 1460358380001
-    },{
+    }, {
         "testcase": "http://localhost:8000/page_load_test/56.com/www.56.com/index.html",
         "domComplete": 1460358389003,
         "domLoading": 1460358380003
@@ -227,12 +228,13 @@ def test_take_result_median_odd():
 
     assert(expected == runner.take_result_median(input_json, len(input_json)))
 
+
 def test_take_result_median_even():
     input_json = [{
         "testcase": "http://localhost:8000/page_load_test/56.com/www.56.com/index.html",
         "domComplete": 1460358389001,
         "domLoading": 1460358380002
-    },{
+    }, {
         "testcase": "http://localhost:8000/page_load_test/56.com/www.56.com/index.html",
         "domComplete": 1460358389002,
         "domLoading": 1460358380001
@@ -246,12 +248,13 @@ def test_take_result_median_even():
 
     assert(expected == runner.take_result_median(input_json, len(input_json)))
 
+
 def test_take_result_median_error():
     input_json = [{
         "testcase": "http://localhost:8000/page_load_test/56.com/www.56.com/index.html",
         "domComplete": None,
         "domLoading": 1460358380002
-    },{
+    }, {
         "testcase": "http://localhost:8000/page_load_test/56.com/www.56.com/index.html",
         "domComplete": 1460358389002,
         "domLoading": 1460358380001
