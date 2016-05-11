@@ -52,7 +52,8 @@ def format_perf_data(perf_json):
     return (
         {
             "performance_data": {
-                "framework": {"name": "talos"},
+                # Framework https://bugzilla.mozilla.org/show_bug.cgi?id=1271472
+                "framework": {"name": "servo-perf"},
                 "suites": suites
             }
         }
