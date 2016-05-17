@@ -7,20 +7,28 @@ import string
 from thclient import (TreeherderClient, TreeherderResultSetCollection,
                       TreeherderJobCollection)
 
-TREEHERDER_SECRET = "b211ed25-4f64-4ece-81b9-11117e539786"
 
 def geometric_mean(iterable):
+        iterable = filter(lambda x: x > 0, iterable)
         return (reduce(operator.mul, iterable)) ** (1.0/len(iterable))
+
+
+def format_testcase_name(name):
+    temp = name.replace('http://localhost:8000/page_load_test/', '')
+    temp = temp.split('/')[0]
+    temp = temp[0:80]
+    return temp
 
 
 def format_perf_data(perf_json):
     suites = []
-    measurement = "domComplete"  # Change this to an array when we have mem test
-    def getTimeFromNavStart(timings, measurement):
-        # navigationStart has lower percision
-        return timings[measurement] - timings['navigationStart'] * 1000
+    measurement = "domComplete"  # Change this to an array when we have more
 
-    measurementFromNavStart = partial(getTimeFromNavStart, measurement=measurement)
+    def get_time_from_nav_start(timings, measurement):
+        return timings[measurement] - timings['navigationStart']
+
+    measurementFromNavStart = partial(get_time_from_nav_start,
+                                      measurement=measurement)
 
     suite = {
         "name": measurement,
@@ -28,8 +36,16 @@ def format_perf_data(perf_json):
         "subtests": []
     }
     for testcase in perf_json:
-        suite["subtests"].append({"name": testcase["testcase"],
-                                  "value": measurementFromNavStart(testcase)})
+        if measurementFromNavStart(testcase) < 0:
+            value = -1
+            print('Error: test case has negative timing. Test timeout?')
+        else:
+            value = measurementFromNavStart(testcase)
+
+        suite["subtests"].append({
+            "name": format_testcase_name(testcase["testcase"]),
+            "value": value}
+        )
 
     suites.append(suite)
 
@@ -45,7 +61,9 @@ def format_perf_data(perf_json):
 
 # TODO: refactor this big function to smaller chunks
 def submit(perf_data, revision):
-    # TODO: load the last commit json and populate the result set
+
+    print("[DEBUG] performance data:")
+    print(perf_data)
     # TODO: read the correct guid from test result
     hashlen = len(revision['commit'])
     job_guid = ''.join(
@@ -64,8 +82,8 @@ def submit(perf_data, revision):
             'author': author,
             'push_timestamp': int(revision['author']['timestamp']),
             'type': 'push',
-            # a list of revisions associated with the resultset. There should be
-            # at least one.
+            # a list of revisions associated with the resultset. There should
+            # be at least one.
             'revisions': [
                 {
                     'comment': revision['subject'],
@@ -171,25 +189,24 @@ def submit(perf_data, revision):
                         # 'job_guid': job_guid,
                         'blob': perf_data
                         # {
-                            #"performance_data": {
-                            #    # TODO: can we create a framwork on treeherder
-                            #    # that is not `talos`?
-                            #    "framework": {"name": "talos"},
-                            #    "suites": [{
-                            #        "name": "performance.timing.domComplete",
-                            #        "value": random.choice(range(15,25)),
-                            #        "subtests": [
-                            #            {"name": "responseEnd", "value": random.choice(range(5,15))},
-                            #            {"name": "loadEventEnd", "value": random.choice(range(25,29))}
-                            #        ]
-                            #    }]
-                            #}
-                        #}
+                        #    "performance_data": {
+                        #        # that is not `talos`?
+                        #        "framework": {"name": "talos"},
+                        #        "suites": [{
+                        #            "name": "performance.timing.domComplete",
+                        #            "value": random.choice(range(15,25)),
+                        #            "subtests": [
+                        #                {"name": "responseEnd", "value": 123},
+                        #                {"name": "loadEventEnd", "value": 223}
+                        #            ]
+                        #        }]
+                        #     }
+                        # }
                     },
                     {
                         'type': 'json',
                         'name': 'Job Info',
-                        #'job_guid': job_guid,
+                        # 'job_guid': job_guid,
                         "blob": {
                             "job_details": [
                                 {
@@ -260,11 +277,15 @@ def submit(perf_data, revision):
             )
         tjc.add(tj)
 
-    # TODO: switch to https when on perduction
-    client = TreeherderClient(protocol='http',
-                              host='local.treeherder.mozilla.org',
-                              client_id='slyu',
-                              secret=TREEHERDER_SECRET)
+    # TODO: extract this read credential code out of this function.
+    with open('credential.json', 'rb') as f:
+        cred = json.load(f)
+
+    client = TreeherderClient(protocol='https',
+                              # host='local.treeherder.mozilla.org',
+                              host='treeherder.allizom.org',
+                              client_id=cred['client_id'],
+                              secret=cred['secret'])
 
     # data structure validation is automatically performed here, if validation
     # fails a TreeherderClientError is raised
@@ -274,7 +295,9 @@ def submit(perf_data, revision):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Submit Servo performance data to Perfherder"
+        description=("Submit Servo performance data to Perfherder. "
+                     "Put your treeherder credentail in credentail.json. "
+                     "You can refer to credential.json.example.")
     )
     parser.add_argument("perf_json",
                         help="the output json from runner")
@@ -291,7 +314,7 @@ def main():
     perf_data = format_perf_data(result_json)
 
     submit(perf_data, revision)
-    print "Done!"
+    print("Done!")
 
 
 if __name__ == "__main__":

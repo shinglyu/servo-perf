@@ -2,7 +2,7 @@ import runner
 
 
 def test_log_parser():
-    mock_log = '''
+    mock_log = b'''
 [PERF] perf block start
 [PERF],testcase,http://localhost:8000/page_load_test/56.com/www.56.com/index.html
 [PERF],navigationStart,1460358376
@@ -55,11 +55,11 @@ Shutting down the Constellation after generating an output file or exit flag spe
         "loadEventEnd": None
     }]
     result = runner.parse_log(mock_log)
-    assert(expected == result)
+    assert(expected == list(result))
 
 
 def test_log_parser_complex():
-    mock_log = '''
+    mock_log = b'''
 [PERF] perf block start
 [PERF],testcase,http://localhost:8000/page_load_test/56.com/www.56.com/content.html
 [PERF],navigationStart,1460358300
@@ -135,7 +135,7 @@ Shutting down the Constellation after generating an output file or exit flag spe
         "domComplete": 1460358389000,
         "loadEventStart": None,
         "loadEventEnd": None
-    },{
+    }, {
         "testcase": "http://localhost:8000/page_load_test/56.com/www.56.com/index.html",
         "navigationStart": 1460358376,
         "unloadEventStart": None,
@@ -160,7 +160,7 @@ Shutting down the Constellation after generating an output file or exit flag spe
         "loadEventEnd": None
     }]
     result = runner.parse_log(mock_log)
-    assert(expected == result)
+    assert(expected == list(result))
 
 
 def test_manifest_loader():
@@ -170,23 +170,24 @@ http://localhost/page_load_test/tp5n/163.com/www.163.com/index.html
 http://localhost/page_load_test/tp5n/56.com/www.56.com/index.html
 
 http://localhost/page_load_test/tp5n/aljazeera.net/aljazeera.net/portal.html
+# Disabled! http://localhost/page_load_test/tp5n/aljazeera.net/aljazeera.net/portal.html
 '''
     expected = [
         "http://localhost/page_load_test/tp5n/163.com/www.163.com/index.html",
         "http://localhost/page_load_test/tp5n/56.com/www.56.com/index.html",
         "http://localhost/page_load_test/tp5n/aljazeera.net/aljazeera.net/portal.html"
     ]
-    assert(expected == runner.parse_manifest(text))
+    assert(expected == list(runner.parse_manifest(text)))
 
 
 def test_filter_result_by_manifest():
     input_json = [{
         "testcase": "http://localhost:8000/page_load_test/56.com/www.56.com/content.html",
         "domComplete": 1460358389000,
-    },{
+    }, {
         "testcase": "non-existing-html",
         "domComplete": 1460358389000,
-    },{
+    }, {
         "testcase": "http://localhost:8000/page_load_test/56.com/www.56.com/index.html",
         "domComplete": 1460358389000,
     }]
@@ -203,16 +204,17 @@ def test_filter_result_by_manifest():
 
     assert(expected == runner.filter_result_by_manifest(input_json, manifest))
 
+
 def test_take_result_median_odd():
     input_json = [{
         "testcase": "http://localhost:8000/page_load_test/56.com/www.56.com/index.html",
         "domComplete": 1460358389001,
         "domLoading": 1460358380002
-    },{
+    }, {
         "testcase": "http://localhost:8000/page_load_test/56.com/www.56.com/index.html",
         "domComplete": 1460358389002,
         "domLoading": 1460358380001
-    },{
+    }, {
         "testcase": "http://localhost:8000/page_load_test/56.com/www.56.com/index.html",
         "domComplete": 1460358389003,
         "domLoading": 1460358380003
@@ -226,12 +228,13 @@ def test_take_result_median_odd():
 
     assert(expected == runner.take_result_median(input_json, len(input_json)))
 
+
 def test_take_result_median_even():
     input_json = [{
         "testcase": "http://localhost:8000/page_load_test/56.com/www.56.com/index.html",
         "domComplete": 1460358389001,
         "domLoading": 1460358380002
-    },{
+    }, {
         "testcase": "http://localhost:8000/page_load_test/56.com/www.56.com/index.html",
         "domComplete": 1460358389002,
         "domLoading": 1460358380001
@@ -245,12 +248,13 @@ def test_take_result_median_even():
 
     assert(expected == runner.take_result_median(input_json, len(input_json)))
 
+
 def test_take_result_median_error():
     input_json = [{
         "testcase": "http://localhost:8000/page_load_test/56.com/www.56.com/index.html",
         "domComplete": None,
         "domLoading": 1460358380002
-    },{
+    }, {
         "testcase": "http://localhost:8000/page_load_test/56.com/www.56.com/index.html",
         "domComplete": 1460358389002,
         "domLoading": 1460358380001
