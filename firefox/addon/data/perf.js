@@ -1,11 +1,15 @@
+print = function(o) {
+    window.dump(o + '\n')
+}
+
 function formatLine(name, t){
   var output = "[PERF]," + name + "," + t;
-  console.log(output);
+  print(output);
   //document.getElementById('timing').innerHTML += output + "<br/>";
 }
 
 function printPerfTiming(){
-  console.log("[PERF] perf block start")
+  print("[PERF] perf block start")
   formatLine("testcase", window.location);
   formatLine("navigationStart", performance.timing.navigationStart);
   formatLine("unloadEventStart", performance.timing.unloadEventStart);
@@ -28,13 +32,17 @@ function printPerfTiming(){
   formatLine("domComplete", performance.timing.domComplete);
   formatLine("loadEventStart", performance.timing.loadEventStart);
   formatLine("loadEventEnd", performance.timing.loadEventEnd);
-  console.log("[PERF] perf block end")
+  print("[PERF] perf block end");
+  window.close()
 }
-window.addEventListener('load', printPerfTiming);
-var timeout = 5;
-window.setTimeout(function(){
-  console.log("[PERF] Timeout after " + timeout + " min. Force stop");
-  printPerfTiming();
-  window.close();
-}, timeout * 60 * 1000)
-
+if (document.readyState === "complete") { 
+    printPerfTiming()
+} else {
+    window.addEventListener('load', printPerfTiming);
+    var timeout = 5;
+    window.setTimeout(function(){
+        print("[PERF] Timeout after " + timeout + " min. Force stop");
+        printPerfTiming();
+        window.close();
+    }, timeout * 60 * 1000)
+}

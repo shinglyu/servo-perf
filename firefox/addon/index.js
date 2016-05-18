@@ -4,6 +4,5 @@ var pageMod = require("sdk/page-mod");
 pageMod.PageMod({
   include: "*",
   contentScriptFile: self.data.url('perf.js'),
-  attachTo: ["top"],
-  contentScriptWhen: "start"
+  attachTo: ["top", "existing"]
 });
