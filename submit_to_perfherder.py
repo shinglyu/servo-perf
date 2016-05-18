@@ -1,5 +1,5 @@
 import argparse
-from functools import partial
+from functools import partial, reduce
 import json
 import operator
 import random
@@ -9,8 +9,8 @@ from thclient import (TreeherderClient, TreeherderResultSetCollection,
 
 
 def geometric_mean(iterable):
-        iterable = filter(lambda x: x > 0, iterable)
-        return (reduce(operator.mul, iterable)) ** (1.0/len(iterable))
+        filtered = list(filter(lambda x: x > 0, iterable))
+        return (reduce(operator.mul, filtered)) ** (1.0/len(filtered))
 
 
 def format_testcase_name(name):
@@ -67,9 +67,10 @@ def submit(perf_data, revision):
     print(perf_data)
     # TODO: read the correct guid from test result
     hashlen = len(revision['commit'])
-    job_guid = ''.join(
-        random.choice(string.letters + string.digits) for i in xrange(hashlen)
-    )
+    job_guid = "x" * hashlen
+    #job_guid = ''.join(
+    #    random.choice(string.letters + string.digits) for i in xrange(hashlen)
+    #)
 
     trsc = TreeherderResultSetCollection()
 
@@ -279,11 +280,11 @@ def submit(perf_data, revision):
         tjc.add(tj)
 
     # TODO: extract this read credential code out of this function.
-    with open('credential.json', 'rb') as f:
+    with open('credential.json', 'r') as f:
         cred = json.load(f)
 
     client = TreeherderClient(protocol='https',
-                              # host='local.treeherder.mozilla.org',
+                              #host='local.treeherder.mozilla.org',
                               host='treeherder.allizom.org',
                               client_id=cred['client_id'],
                               secret=cred['secret'])
@@ -306,10 +307,10 @@ def main():
                         help="the json containing the servo revision data")
     args = parser.parse_args()
 
-    with open(args.perf_json, 'rb') as f:
+    with open(args.perf_json, 'r') as f:
         result_json = json.load(f)
 
-    with open(args.revision_json, 'rb') as f:
+    with open(args.revision_json, 'r') as f:
         revision = json.load(f)
 
     perf_data = format_perf_data(result_json)

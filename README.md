@@ -3,6 +3,10 @@ Servo Page Load Time Test
 
 [Tracking Bug](https://github.com/servo/servo/issues/10452)
 
+# Prerequisite
+
+* Python3
+
 # Usage
 ## Build Servo
 * Clone the servo repo
@@ -30,7 +34,7 @@ If you want to test the data submission code in `submit_to_perfherder.py`, you c
 * Download [tp5n.zip](http://people.mozilla.org/~jmaher/taloszips/zips/tp5n.zip), extract it to `page_load_test/`
 * Put your `servo` binary, `revision.json` and `resources` folder in `servo/`
 * Run `prepare_manifest.sh` to tranform the tp5n manifest to our format
-* `virtualenv venv; source venv/bin/activate; pip install treeherder-client`
+* `python3 -m virtualenv venv; source venv/bin/activate; pip install treeherder-client`
 * Run `test_all.sh`
 * Test results are submitted to https://treeherder.allizom.org/#/jobs?repo=servo
 
@@ -52,8 +56,4 @@ The following tests can be run by `python -m pytest <filename>`:
 
 * `test_runner.py`
 * `test_submit_to_perfherder.py`
-
-# Python version
-
-The `runner.py` needs to be run on Python3.4+ (for the `timeout` in `subprocess`). But the `submit_to_perfherder.py` still runs on Python2. We should migrate everthing to Python3 later.
 
