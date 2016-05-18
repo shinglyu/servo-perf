@@ -17,28 +17,37 @@ def parse_manifest(text):
                   map(lambda x: x.strip(), text.splitlines()))
 
 
-def test_load(url, timeout):
-    ua_script_path = "{}/user-agent-js".format(os.getcwd())
-    test_cmd = ("timeout {timeout}s ./servo/servo '{url}'"
-                " --userscripts {ua} -x -o {png}").format(timeout=timeout,
-                                                         url=url,
-                                                         ua=ua_script_path,
-                                                         png="output.png")
-
+def execute_test(url, command, timeout):
     print("Running test:")
-    print(test_cmd)
-    print("Timeout threshold:{}".format(timeout))
+    print(command)
+    print("Timeout:{}".format(timeout))
     try:
-        return subprocess.check_output(test_cmd, stderr=subprocess.STDOUT,
-                                      shell=True, timeout=timeout)
+        return subprocess.check_output(command, stderr=subprocess.STDOUT,
+                                       shell=True, timeout=timeout)
     except subprocess.CalledProcessError as e:
         print("Unexpected Fail:")
         print(e)
-        print("You man want to re-run the test manually:\n{}".format(test_cmd))
+        print("You man want to re-run the test manually:\n{}".format(command))
     except subprocess.TimeoutExpired:
         print("Test timeout: {}".format(url))
-
     return ""
+
+
+def run_servo(url, timeout):
+    ua_script_path = "{}/user-agent-js".format(os.getcwd())
+    test_cmd = ("timeout {timeout}s ./servo/servo '{url}'"
+                " --userscripts {ua} -x -o {png}").format(timeout=timeout,
+                                                          url=url,
+                                                          ua=ua_script_path,
+                                                          png="output.png")
+
+    return execute_test(url, test_cmd, timeout)
+
+
+def run_gecko(url, timeout):
+    test_cmd = ("timeout {timeout}s firefox -P servo {url}"
+                .format(timeout=timeout, url=url))
+    return execute_test(url, test_cmd, timeout)
 
 
 def parse_log(log, testcase=None):
@@ -170,8 +179,16 @@ def main():
                         default=300,  # 5 min
                         help=("kill the test if not finished in time (sec)."
                               " Default: 5 min"))
+    parser.add_argument("--engine",
+                        type=str,
+                        default='servo',
+                        help=("The engine to run the tests on. Currently only"
+                              " servo and gecko are supported."))
     args = parser.parse_args()
-
+    if args.engine == 'servo':
+        runner = run_servo
+    elif args.engine == 'gecko':
+        runner = run_gecko
     try:
         # Assume the server is up and running
         testcases = load_manifest(args.tp5_manifest)
@@ -181,8 +198,8 @@ def main():
                 print("Running test {}/{} on {}".format(run + 1,
                                                         args.runs,
                                                         testcase))
-                log = test_load(testcase, args.timeout)
-                result = parse_log(log, testcase)
+                log = runner(testcase, args.timeout)
+                result = parse_log(log)
                 results += result
 
         save_result_json(results, args.output_file, testcases, args.runs)
