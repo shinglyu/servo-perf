@@ -4,6 +4,7 @@ import itertools
 import json
 import os
 import subprocess
+from statistics import median, StatisticsError
 
 
 def load_manifest(filename):
@@ -27,7 +28,7 @@ def execute_test(url, command, timeout):
     except subprocess.CalledProcessError as e:
         print("Unexpected Fail:")
         print(e)
-        print("You man want to re-run the test manually:\n{}".format(command))
+        print("You may want to re-run the test manually:\n{}".format(command))
     except subprocess.TimeoutExpired:
         print("Test timeout: {}".format(url))
     return ""
@@ -115,16 +116,6 @@ def filter_result_by_manifest(result_json, manifest):
     return [tc for tc in result_json if tc['testcase'] in manifest]
 
 
-def median(lst):
-    lst = sorted(lst)
-    if len(lst) < 1:
-        return None
-    if len(lst) % 2 == 1:
-        return lst[int(((len(lst)+1)/2)-1)]
-    else:
-        return float(sum(lst[int((len(lst)/2)-1):int((len(lst)/2)+1)]))/2.0
-
-
 def take_result_median(result_json, expected_runs):
     median_results = []
     for k, g in itertools.groupby(result_json, lambda x: x['testcase']):
@@ -138,8 +129,12 @@ def take_result_median(result_json, expected_runs):
             if k == "testcase":
                 median_result[k] = group[0][k]
             else:
-                median_result[k] = median(filter(lambda x: x is not None,
-                                                 map(lambda x: x[k], group)))
+                try:
+                    median_result[k] = median(
+                            filter(lambda x: x is not None,
+                                   map(lambda x: x[k], group)))
+                except StatisticsError:
+                    median_result[k] = 0
         median_results.append(median_result)
     return median_results
 
