@@ -34,21 +34,20 @@ def execute_test(url, command, timeout):
     return ""
 
 
-def run_servo(url, timeout):
+def get_servo_command(url, timeout):
     ua_script_path = "{}/user-agent-js".format(os.getcwd())
     test_cmd = ("timeout {timeout}s ./servo/servo '{url}'"
                 " --userscripts {ua} -x -o {png}").format(timeout=timeout,
                                                           url=url,
                                                           ua=ua_script_path,
                                                           png="output.png")
+    return test_cmd
 
-    return execute_test(url, test_cmd, timeout)
 
-
-def run_gecko(url, timeout):
+def get_gecko_command(url, timeout):
     test_cmd = ("timeout {timeout}s firefox -P servo {url}"
                 .format(timeout=timeout, url=url))
-    return execute_test(url, test_cmd, timeout)
+    return test_cmd
 
 
 def parse_log(log, testcase=None):
@@ -130,11 +129,10 @@ def take_result_median(result_json, expected_runs):
                 median_result[k] = group[0][k]
             else:
                 try:
-                    median_result[k] = median(
-                            filter(lambda x: x is not None,
-                                   map(lambda x: x[k], group)))
+                    median_result[k] = median([x[k] for x in group
+                                               if x[k] is not None])
                 except StatisticsError:
-                    median_result[k] = 0
+                    median_result[k] = -1
         median_results.append(median_result)
     return median_results
 
@@ -181,9 +179,9 @@ def main():
                               " servo and gecko are supported."))
     args = parser.parse_args()
     if args.engine == 'servo':
-        runner = run_servo
+        command_factory = get_servo_command
     elif args.engine == 'gecko':
-        runner = run_gecko
+        command_factory = get_gecko_command
     try:
         # Assume the server is up and running
         testcases = load_manifest(args.tp5_manifest)
@@ -193,7 +191,8 @@ def main():
                 print("Running test {}/{} on {}".format(run + 1,
                                                         args.runs,
                                                         testcase))
-                log = runner(testcase, args.timeout)
+                command = command_factory(testcase, args.timeout)
+                log = execute_test(testcase, command, args.timeout)
                 result = parse_log(log)
                 results += result
 
