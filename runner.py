@@ -27,7 +27,7 @@ def test_load(url, timeout):
 
     print("Running test:")
     print(test_cmd)
-    print("Timeout:{}".format(timeout))
+    print("Timeout threshold:{}".format(timeout))
     try:
         return subprocess.check_output(test_cmd, stderr=subprocess.STDOUT,
                                       shell=True, timeout=timeout)
@@ -76,8 +76,8 @@ def parse_log(log):
 
 
 def filter_result_by_manifest(result_json, manifest):
-    print(manifest)
-    print(result_json)
+    # print(manifest)
+    # print(result_json)
     return [tc for tc in result_json if tc['testcase'] in manifest]
 
 
@@ -112,11 +112,11 @@ def take_result_median(result_json, expected_runs):
 
 def save_result_json(results, filename, manifest, expected_runs):
 
-    print(results)
+    # print(results)
     results = filter_result_by_manifest(results, manifest)
-    print(results)
+    # print(results)
     results = take_result_median(results, expected_runs)
-    print(results)
+    # print(results)
 
     if len(results) == 0:
         with open(filename, 'w') as f:
