@@ -4,6 +4,7 @@ import itertools
 import json
 import os
 import subprocess
+from statistics import median, StatisticsError
 
 
 def load_manifest(filename):
@@ -17,28 +18,36 @@ def parse_manifest(text):
                   map(lambda x: x.strip(), text.splitlines()))
 
 
-def test_load(url, timeout):
-    ua_script_path = "{}/user-agent-js".format(os.getcwd())
-    test_cmd = ("timeout {timeout}s ./servo/servo '{url}'"
-                " --userscripts {ua} -x -o {png}").format(timeout=timeout,
-                                                         url=url,
-                                                         ua=ua_script_path,
-                                                         png="output.png")
-
+def execute_test(url, command, timeout):
     print("Running test:")
-    print(test_cmd)
-    print("Timeout threshold:{}".format(timeout))
+    print(command)
+    print("Timeout:{}".format(timeout))
     try:
-        return subprocess.check_output(test_cmd, stderr=subprocess.STDOUT,
-                                      shell=True, timeout=timeout)
+        return subprocess.check_output(command, stderr=subprocess.STDOUT,
+                                       shell=True, timeout=timeout)
     except subprocess.CalledProcessError as e:
         print("Unexpected Fail:")
         print(e)
-        print("You man want to re-run the test manually:\n{}".format(test_cmd))
+        print("You may want to re-run the test manually:\n{}".format(command))
     except subprocess.TimeoutExpired:
         print("Test timeout: {}".format(url))
-
     return ""
+
+
+def get_servo_command(url, timeout):
+    ua_script_path = "{}/user-agent-js".format(os.getcwd())
+    test_cmd = ("timeout {timeout}s ./servo/servo '{url}'"
+                " --userscripts {ua} -x -o {png}").format(timeout=timeout,
+                                                          url=url,
+                                                          ua=ua_script_path,
+                                                          png="output.png")
+    return test_cmd
+
+
+def get_gecko_command(url, timeout):
+    test_cmd = ("timeout {timeout}s firefox -P servo {url}"
+                .format(timeout=timeout, url=url))
+    return test_cmd
 
 
 def parse_log(log, testcase=None):
@@ -106,16 +115,6 @@ def filter_result_by_manifest(result_json, manifest):
     return [tc for tc in result_json if tc['testcase'] in manifest]
 
 
-def median(lst):
-    lst = sorted(lst)
-    if len(lst) < 1:
-        return None
-    if len(lst) % 2 == 1:
-        return lst[int(((len(lst)+1)/2)-1)]
-    else:
-        return float(sum(lst[int((len(lst)/2)-1):int((len(lst)/2)+1)]))/2.0
-
-
 def take_result_median(result_json, expected_runs):
     median_results = []
     for k, g in itertools.groupby(result_json, lambda x: x['testcase']):
@@ -129,8 +128,11 @@ def take_result_median(result_json, expected_runs):
             if k == "testcase":
                 median_result[k] = group[0][k]
             else:
-                median_result[k] = median(filter(lambda x: x is not None,
-                                                 map(lambda x: x[k], group)))
+                try:
+                    median_result[k] = median([x[k] for x in group
+                                               if x[k] is not None])
+                except StatisticsError:
+                    median_result[k] = -1
         median_results.append(median_result)
     return median_results
 
@@ -170,8 +172,16 @@ def main():
                         default=300,  # 5 min
                         help=("kill the test if not finished in time (sec)."
                               " Default: 5 min"))
+    parser.add_argument("--engine",
+                        type=str,
+                        default='servo',
+                        help=("The engine to run the tests on. Currently only"
+                              " servo and gecko are supported."))
     args = parser.parse_args()
-
+    if args.engine == 'servo':
+        command_factory = get_servo_command
+    elif args.engine == 'gecko':
+        command_factory = get_gecko_command
     try:
         # Assume the server is up and running
         testcases = load_manifest(args.tp5_manifest)
@@ -181,8 +191,9 @@ def main():
                 print("Running test {}/{} on {}".format(run + 1,
                                                         args.runs,
                                                         testcase))
-                log = test_load(testcase, args.timeout)
-                result = parse_log(log, testcase)
+                command = command_factory(testcase, args.timeout)
+                log = execute_test(testcase, command, args.timeout)
+                result = parse_log(log)
                 results += result
 
         save_result_json(results, args.output_file, testcases, args.runs)
