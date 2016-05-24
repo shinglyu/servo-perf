@@ -41,7 +41,7 @@ def test_load(url, timeout):
     return ""
 
 
-def parse_log(log):
+def parse_log(log, testcase=None):
     blocks = []
     block = []
     copy = False
@@ -71,8 +71,33 @@ def parse_log(log):
 
     if len(blocks) == 0:
         print("Didn't find any perf data in the log, test timeout?")
-    timings = map(parse_block, blocks)
-    return timings
+        print("Fillng in a dummy perf data")
+        return [{
+            "navigationStart": 0,
+            "unloadEventStart": -1,
+            "domLoading": -1,
+            "fetchStart": -1,
+            "responseStart": -1,
+            "loadEventEnd": -1,
+            "connectStart": -1,
+            "domainLookupStart": -1,
+            "redirectStart": -1,
+            "domContentLoadedEventEnd": -1,
+            "requestStart": -1,
+            "secureConnectionStart": -1,
+            "connectEnd": -1,
+            "loadEventStart": -1,
+            "domInteractive": -1,
+            "domContentLoadedEventStart": -1,
+            "redirectEnd": -1,
+            "domainLookupEnd": -1,
+            "unloadEventEnd": -1,
+            "responseEnd": -1,
+            "testcase": testcase,
+            "domComplete": -1,
+        }]
+    else:
+        return map(parse_block, blocks)
 
 
 def filter_result_by_manifest(result_json, manifest):
@@ -157,7 +182,7 @@ def main():
                                                         args.runs,
                                                         testcase))
                 log = test_load(testcase, args.timeout)
-                result = parse_log(log)
+                result = parse_log(log, testcase)
                 results += result
 
         save_result_json(results, args.output_file, testcases, args.runs)
