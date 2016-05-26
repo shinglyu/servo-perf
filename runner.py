@@ -155,6 +155,26 @@ def save_result_json(results, filename, manifest, expected_runs):
     print("Result saved to {}".format(filename))
 
 
+def format_result_summary(results):
+    failures = list(filter(lambda x: x['domComplete'] == -1, results))
+    result_log = """
+========================================
+Total {total} tests; {suc} succeeded, {fail} failed.
+
+Failure summary:
+""".format(
+            total=len(results),
+            suc =len(list(filter(lambda x: x['domComplete'] != -1, results))),
+            fail=len(failures)
+           )
+    for failure in failures:
+        result_log += " - {}\n".format(failure['testcase'])
+
+    result_log += "========================================\n"
+
+    return result_log
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Run page load test on servo"
@@ -193,9 +213,11 @@ def main():
                                                         testcase))
                 command = command_factory(testcase, args.timeout)
                 log = execute_test(testcase, command, args.timeout)
-                result = parse_log(log)
+                result = parse_log(log, testcase)
+                # TODO: check for other measurements
                 results += result
 
+        print(format_result_summary(results))
         save_result_json(results, args.output_file, testcases, args.runs)
 
     except KeyboardInterrupt:

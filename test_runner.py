@@ -299,3 +299,22 @@ def test_take_result_median_error():
     }]
 
     assert(expected == runner.take_result_median(input_json, len(input_json)))
+
+def test_log_result():
+    results = [{
+        "testcase": "http://localhost:8000/page_load_test/56.com/www.56.com/index.html",
+        "domComplete": -1
+    }, {
+        "testcase": "http://localhost:8000/page_load_test/104.com/www.104.com/index.html",
+        "domComplete": 123456789
+    }]
+
+    expected = """
+========================================
+Total 2 tests; 1 succeeded, 1 failed.
+
+Failure summary:
+ - http://localhost:8000/page_load_test/56.com/www.56.com/index.html
+========================================
+"""
+    assert(expected == runner.format_result_summary(results))
