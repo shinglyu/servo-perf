@@ -67,10 +67,10 @@ def submit(perf_data, revision):
     print(perf_data)
     # TODO: read the correct guid from test result
     hashlen = len(revision['commit'])
-    job_guid = "x" * hashlen
-    #job_guid = ''.join(
-    #    random.choice(string.letters + string.digits) for i in xrange(hashlen)
-    #)
+    # job_guid = "x" * hashlen
+    job_guid = ''.join(
+        random.choice(string.ascii_letters + string.digits) for i in range(hashlen)
+    )
 
     trsc = TreeherderResultSetCollection()
 
@@ -149,7 +149,9 @@ def submit(perf_data, revision):
                 'end_timestamp':  revision['author']['timestamp'],
 
                 'state': 'completed',
-                'result': 'success',
+                # 'result': 'success',
+                'result': 'testfailed',
+                # testfailed if we have timeout
 
                 'machine': 'local-machine',
                 # TODO: read platform test result
@@ -284,8 +286,9 @@ def submit(perf_data, revision):
         cred = json.load(f)
 
     client = TreeherderClient(protocol='https',
-                              #host='local.treeherder.mozilla.org',
                               host='treeherder.allizom.org',
+                              # protocol='http',
+                              # host='local.treeherder.mozilla.org',
                               client_id=cred['client_id'],
                               secret=cred['secret'])
 
