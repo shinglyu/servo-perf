@@ -7,6 +7,8 @@ import string
 from thclient import (TreeherderClient, TreeherderResultSetCollection,
                       TreeherderJobCollection)
 
+from runner import format_result_summary
+
 
 def geometric_mean(iterable):
         filtered = list(filter(lambda x: x > 0, iterable))
@@ -38,7 +40,7 @@ def format_perf_data(perf_json):
     for testcase in perf_json:
         if measurementFromNavStart(testcase) < 0:
             value = -1
-            print('Error: test case has negative timing. Test timeout?')
+            # print('Error: test case has negative timing. Test timeout?')
         else:
             value = measurementFromNavStart(testcase)
 
@@ -61,10 +63,12 @@ def format_perf_data(perf_json):
 
 
 # TODO: refactor this big function to smaller chunks
-def submit(perf_data, revision):
+def submit(perf_data, failures, revision, summary):
 
     print("[DEBUG] performance data:")
     print(perf_data)
+    print("[DEBUG] failures:")
+    print(map(lambda x: x['testcase'], failures))
     # TODO: read the correct guid from test result
     hashlen = len(revision['commit'])
     # job_guid = "x" * hashlen
@@ -122,6 +126,10 @@ def submit(perf_data, revision):
 
         trsc.add(trs)
 
+    result = "success"
+    if len(failures) > 0:
+        result = "testfailed"
+
     dataset = [
         {
             'project': 'servo',
@@ -149,9 +157,7 @@ def submit(perf_data, revision):
                 'end_timestamp':  revision['author']['timestamp'],
 
                 'state': 'completed',
-                # 'result': 'success',
-                'result': 'testfailed',
-                # testfailed if we have timeout
+                'result': result,  # "success" or "testfailed"
 
                 'machine': 'local-machine',
                 # TODO: read platform test result
@@ -214,10 +220,15 @@ def submit(perf_data, revision):
                         "blob": {
                             "job_details": [
                                 {
-                                    "url": "https://www.github.com/servo/servo",
-                                    "value": "website",
                                     "content_type": "link",
+                                    "url": "https://www.github.com/servo/servo",
+                                    "value": "GitHub",
                                     "title": "Source code"
+                                },
+                                {
+                                    "content_type": "raw_html",
+                                    "title": "Result Summary",
+                                    "value": summary
                                 }
                             ]
                         }
@@ -317,8 +328,11 @@ def main():
         revision = json.load(f)
 
     perf_data = format_perf_data(result_json)
+    failures = list(filter(lambda x: x['domComplete'] == -1, result_json))
+    summary = format_result_summary(result_json)
+    summary = summary.replace('\n', '<br/>')
 
-    submit(perf_data, revision)
+    submit(perf_data, failures, revision, summary)
     print("Done!")
 
 
