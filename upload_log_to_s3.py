@@ -1,6 +1,8 @@
 import argparse
 import json
-import tinys3
+import boto3
+from boto3.s3.transfer import S3Transfer
+
 
 DEFAULT_BUCKET = 'servo-perf'
 # DEFAULT_ENDPOINT = 's3-us-west-2.amazonaws.com'
@@ -11,13 +13,12 @@ def upload_to_s3(filename, remote_filename):
     with open('credential.json', 'r') as f:
         cred = json.load(f)
 
-    conn = tinys3.Connection(cred['S3_ACCESS_KEY'],
-                             cred['S3_SECRET_KEY'],
-                             tls=True)
-                             # endpoint=DEFAULT_ENDPOINT)
+    client = boto3.client('s3',
+                          aws_access_key_id=cred['S3_ACCESS_KEY'],
+                          aws_secret_access_key=cred['S3_SECRET_KEY'])
+    transfer = S3Transfer(client)
+    transfer.upload_file(filename, DEFAULT_BUCKET, remote_filename)
 
-    f = open(filename, 'rb')
-    conn.upload(remote_filename, f, DEFAULT_BUCKET)
 
 if __name__ == '__main__':
     from os.path import basename
