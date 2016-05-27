@@ -18,6 +18,16 @@ def upload_to_s3(filename, remote_filename):
                           aws_secret_access_key=cred['S3_SECRET_KEY'])
     transfer = S3Transfer(client)
     transfer.upload_file(filename, DEFAULT_BUCKET, remote_filename)
+                         # extra_args={'ACL': 'public-read'})
+
+    # Generate public url
+    bucket_location = client.get_bucket_location(Bucket=DEFAULT_BUCKET)
+    object_url = "https://s3-{0}.amazonaws.com/{1}/{2}".format(
+            bucket_location['LocationConstraint'],
+            DEFAULT_BUCKET,
+            remote_filename
+    )
+    return object_url
 
 
 if __name__ == '__main__':
@@ -29,4 +39,4 @@ if __name__ == '__main__':
     parser.add_argument("path",
                         help="the file you want to upload")
     args = parser.parse_args()
-    upload_to_s3(args.path, basename(args.path))
+    print(upload_to_s3(args.path, basename(args.path)))
