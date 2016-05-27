@@ -167,8 +167,9 @@ Failure summary:
             suc =len(list(filter(lambda x: x['domComplete'] != -1, results))),
             fail=len(failures)
            )
-    for failure in failures:
-        result_log += " - {}\n".format(failure['testcase'])
+    uniq_failures = list(set(map(lambda x: x['testcase'], failures)))
+    for failure in uniq_failures:
+        result_log += " - {}\n".format(failure)
 
     result_log += "========================================\n"
 
