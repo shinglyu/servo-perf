@@ -12,6 +12,7 @@ PERF_FILE="output/perf-$(date +"%s").json"
 
 echo "Running tests"
 python3 runner.py --runs 3 $MANIFEST $PERF_FILE 
+sudo ntpdate tw.pool.ntp.org
 echo "Submitting to Perfherder"
 python3 submit_to_perfherder.py $PERF_FILE servo/revision.json
 
