@@ -305,13 +305,16 @@ def test_log_result():
         "testcase": "http://localhost:8000/page_load_test/56.com/www.56.com/index.html",
         "domComplete": -1
     }, {
+        "testcase": "http://localhost:8000/page_load_test/56.com/www.56.com/index.html",
+        "domComplete": -1
+    }, {
         "testcase": "http://localhost:8000/page_load_test/104.com/www.104.com/index.html",
         "domComplete": 123456789
     }]
 
     expected = """
 ========================================
-Total 2 tests; 1 succeeded, 1 failed.
+Total 3 tests; 1 succeeded, 2 failed.
 
 Failure summary:
  - http://localhost:8000/page_load_test/56.com/www.56.com/index.html
