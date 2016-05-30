@@ -22,7 +22,7 @@ def format_testcase_name(name):
     return temp
 
 
-def format_perf_data(perf_json):
+def format_perf_data(perf_json, engine):
     suites = []
     measurement = "domComplete"  # Change this to an array when we have more
 
@@ -32,8 +32,13 @@ def format_perf_data(perf_json):
     measurementFromNavStart = partial(get_time_from_nav_start,
                                       measurement=measurement)
 
+    if (engine == 'gecko'):
+        name = 'gecko.{}'.format(measurement)
+    else:
+        name = measurement
+
     suite = {
-        "name": measurement,
+        "name": name,
         "value": geometric_mean(map(measurementFromNavStart, perf_json)),
         "subtests": []
     }
@@ -62,44 +67,10 @@ def format_perf_data(perf_json):
     )
 
 
-# TODO: refactor this big function to smaller chunks
-def submit(perf_data, failures, revision, summary):
-
-    print("[DEBUG] performance data:")
-    print(perf_data)
-    print("[DEBUG] failures:")
-    print(map(lambda x: x['testcase'], failures))
-    # TODO: read the correct guid from test result
-    hashlen = len(revision['commit'])
-    # job_guid = "x" * hashlen
-    job_guid = ''.join(
-        random.choice(string.ascii_letters + string.digits) for i in range(hashlen)
-    )
-
+def create_resultset_collection(dataset):
+    print("[DEBUG] ResultSet Collection:")
+    print(dataset)
     trsc = TreeherderResultSetCollection()
-
-    author = "{} <{}>".format(revision['author']['name'],
-                              revision['author']['email'])
-
-    dataset = [
-        {
-            # The top-most revision in the list of commits for a push.
-            'revision': revision['commit'],
-            'author': author,
-            'push_timestamp': int(revision['author']['timestamp']),
-            'type': 'push',
-            # a list of revisions associated with the resultset. There should
-            # be at least one.
-            'revisions': [
-                {
-                    'comment': revision['subject'],
-                    'revision': revision['commit'],
-                    'repository': 'servo',
-                    'author': author
-                }
-            ]
-        }
-    ]
 
     for data in dataset:
 
@@ -126,17 +97,127 @@ def submit(perf_data, failures, revision, summary):
 
         trsc.add(trs)
 
+    return trsc
+
+
+def create_job_collection(dataset):
+    print("[DEBUG] Job Collection:")
+    print(dataset)
+
+    tjc = TreeherderJobCollection()
+
+    for data in dataset:
+
+        tj = tjc.get_job()
+
+        tj.add_revision(data['revision'])
+        tj.add_project(data['project'])
+        tj.add_coalesced_guid(data['job']['coalesced'])
+        tj.add_job_guid(data['job']['job_guid'])
+        tj.add_job_name(data['job']['name'])
+        tj.add_job_symbol(data['job']['job_symbol'])
+        tj.add_group_name(data['job']['group_name'])
+        tj.add_group_symbol(data['job']['group_symbol'])
+        tj.add_description(data['job']['desc'])
+        tj.add_product_name(data['job']['product_name'])
+        tj.add_state(data['job']['state'])
+        tj.add_result(data['job']['result'])
+        tj.add_reason(data['job']['reason'])
+        tj.add_who(data['job']['who'])
+        tj.add_tier(data['job']['tier'])
+        tj.add_submit_timestamp(data['job']['submit_timestamp'])
+        tj.add_start_timestamp(data['job']['start_timestamp'])
+        tj.add_end_timestamp(data['job']['end_timestamp'])
+        tj.add_machine(data['job']['machine'])
+
+        tj.add_build_info(
+            data['job']['build_platform']['os_name'],
+            data['job']['build_platform']['platform'],
+            data['job']['build_platform']['architecture']
+        )
+
+        tj.add_machine_info(
+            data['job']['machine_platform']['os_name'],
+            data['job']['machine_platform']['platform'],
+            data['job']['machine_platform']['architecture']
+        )
+
+        tj.add_option_collection(data['job']['option_collection'])
+
+        # for log_reference in data['job']['log_references']:
+        #    tj.add_log_reference( 'buildbot_text', log_reference['url'])
+
+        # data['artifact'] is a list of artifacts
+        for artifact_data in data['job']['artifacts']:
+            tj.add_artifact(
+                artifact_data['name'],
+                artifact_data['type'],
+                artifact_data['blob']
+            )
+        tjc.add(tj)
+
+        return tjc
+
+# TODO: refactor this big function to smaller chunks
+def submit(perf_data, failures, revision, summary, engine):
+
+    print("[DEBUG] failures:")
+    print(list(map(lambda x: x['testcase'], failures)))
+    # TODO: read the correct guid from test result
+
+    author = "{} <{}>".format(revision['author']['name'],
+                              revision['author']['email'])
+
+    dataset = [
+        {
+            # The top-most revision in the list of commits for a push.
+            'revision': revision['commit'],
+            'author': author,
+            'push_timestamp': int(revision['author']['timestamp']),
+            'type': 'push',
+            # a list of revisions associated with the resultset. There should
+            # be at least one.
+            'revisions': [
+                {
+                    'comment': revision['subject'],
+                    'revision': revision['commit'],
+                    'repository': 'servo',
+                    'author': author
+                }
+            ]
+        }
+    ]
+
+    trsc = create_resultset_collection(dataset)
+
     result = "success"
     if len(failures) > 0:
         result = "testfailed"
 
+    hashlen = len(revision['commit'])
+    # job_guid = "x" * hashlen
+    job_guid = ''.join(
+        random.choice(string.ascii_letters + string.digits) for i in range(hashlen)
+    )
+
+    if (engine == "gecko"):
+        project = "mozilla-release"
+        job_symbol = 'PLG'
+        group_symbol = 'SPG'
+        group_name = 'Servo Perf on Gecko'
+    else:
+        project = "servo"
+        job_symbol = 'PL'
+        group_symbol = 'SP'
+        group_name = 'Servo Perf'
+
     dataset = [
         {
-            'project': 'servo',
+            'project': project,
             'revision': revision['commit'],
             'job': {
                 'job_guid': job_guid,
-                'product_name': 'servo',
+                'product_name': project,
                 'reason': 'scheduler',
                 # TODO:What is `who` for?
                 'who': 'Servo',
@@ -144,12 +225,12 @@ def submit(perf_data, failures, revision, summary):
                 'name': 'Servo Page Load Time',
                 # The symbol representing the job displayed in
                 # treeherder.allizom.org
-                'job_symbol': 'PL',
+                'job_symbol': job_symbol,
 
                 # The symbol representing the job group in
                 # treeherder.allizom.org
-                'group_symbol': 'SP',
-                'group_name': 'Servo Perf',
+                'group_symbol': group_symbol,
+                'group_name': group_name,
 
                 # TODO: get the real timing from the test runner
                 'submit_timestamp': revision['author']['timestamp'],
@@ -240,66 +321,16 @@ def submit(perf_data, failures, revision, summary):
         }
     ]
 
-    tjc = TreeherderJobCollection()
-
-    for data in dataset:
-
-        tj = tjc.get_job()
-
-        tj.add_revision(data['revision'])
-        tj.add_project(data['project'])
-        tj.add_coalesced_guid(data['job']['coalesced'])
-        tj.add_job_guid(data['job']['job_guid'])
-        tj.add_job_name(data['job']['name'])
-        tj.add_job_symbol(data['job']['job_symbol'])
-        tj.add_group_name(data['job']['group_name'])
-        tj.add_group_symbol(data['job']['group_symbol'])
-        tj.add_description(data['job']['desc'])
-        tj.add_product_name(data['job']['product_name'])
-        tj.add_state(data['job']['state'])
-        tj.add_result(data['job']['result'])
-        tj.add_reason(data['job']['reason'])
-        tj.add_who(data['job']['who'])
-        tj.add_tier(data['job']['tier'])
-        tj.add_submit_timestamp(data['job']['submit_timestamp'])
-        tj.add_start_timestamp(data['job']['start_timestamp'])
-        tj.add_end_timestamp(data['job']['end_timestamp'])
-        tj.add_machine(data['job']['machine'])
-
-        tj.add_build_info(
-            data['job']['build_platform']['os_name'],
-            data['job']['build_platform']['platform'],
-            data['job']['build_platform']['architecture']
-        )
-
-        tj.add_machine_info(
-            data['job']['machine_platform']['os_name'],
-            data['job']['machine_platform']['platform'],
-            data['job']['machine_platform']['architecture']
-        )
-
-        tj.add_option_collection(data['job']['option_collection'])
-
-        # for log_reference in data['job']['log_references']:
-        #    tj.add_log_reference( 'buildbot_text', log_reference['url'])
-
-        # data['artifact'] is a list of artifacts
-        for artifact_data in data['job']['artifacts']:
-            tj.add_artifact(
-                artifact_data['name'],
-                artifact_data['type'],
-                artifact_data['blob']
-            )
-        tjc.add(tj)
+    tjc = create_job_collection(dataset)
 
     # TODO: extract this read credential code out of this function.
     with open('credential.json', 'r') as f:
         cred = json.load(f)
 
-    client = TreeherderClient(protocol='https',
-                              host='treeherder.allizom.org',
-                              # protocol='http',
-                              # host='local.treeherder.mozilla.org',
+    client = TreeherderClient(# protocol='https',
+                              # host='treeherder.allizom.org',
+                              protocol='http',
+                              host='local.treeherder.mozilla.org',
                               client_id=cred['client_id'],
                               secret=cred['secret'])
 
@@ -319,6 +350,11 @@ def main():
                         help="the output json from runner")
     parser.add_argument("revision_json",
                         help="the json containing the servo revision data")
+    parser.add_argument("--engine",
+                        type=str,
+                        default='servo',
+                        help=("The engine to run the tests on. Currently only"
+                              " servo and gecko are supported."))
     args = parser.parse_args()
 
     with open(args.perf_json, 'r') as f:
@@ -327,12 +363,12 @@ def main():
     with open(args.revision_json, 'r') as f:
         revision = json.load(f)
 
-    perf_data = format_perf_data(result_json)
+    perf_data = format_perf_data(result_json, args.engine)
     failures = list(filter(lambda x: x['domComplete'] == -1, result_json))
     summary = format_result_summary(result_json)
     summary = summary.replace('\n', '<br/>')
 
-    submit(perf_data, failures, revision, summary)
+    submit(perf_data, failures, revision, summary, args.engine)
     print("Done!")
 
 

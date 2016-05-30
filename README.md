@@ -42,6 +42,10 @@ If you want to test the data submission code in `submit_to_perfherder.py`, you c
 
 * Install Firefox Nightly in your PATH
 * Untar the `servo.tar.gz` in `firefox/`, make it `firefox/servo`
+* Getting commit message: 
+  * http://ftp.mozilla.org/pub/firefox/releases/
+  * http://hg.mozilla.org/releases/mozilla-release/
+
 
 # How it works
 
