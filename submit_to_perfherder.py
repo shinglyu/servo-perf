@@ -201,7 +201,9 @@ def submit(perf_data, failures, revision, summary, engine):
     )
 
     if (engine == "gecko"):
-        project = "mozilla-release"
+        # project = "mozilla-release"
+        # TODO: figure out how to use mozilla-release as project
+        project = "servo"
         job_symbol = 'PLG'
         group_symbol = 'SPG'
         group_name = 'Servo Perf on Gecko'
