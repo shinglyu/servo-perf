@@ -327,10 +327,10 @@ def submit(perf_data, failures, revision, summary, engine):
     with open('credential.json', 'r') as f:
         cred = json.load(f)
 
-    client = TreeherderClient(# protocol='https',
-                              # host='treeherder.allizom.org',
-                              protocol='http',
-                              host='local.treeherder.mozilla.org',
+    client = TreeherderClient(protocol='https',
+                              host='treeherder.allizom.org',
+                              # protocol='http',
+                              # host='local.treeherder.mozilla.org',
                               client_id=cred['client_id'],
                               secret=cred['secret'])
 
