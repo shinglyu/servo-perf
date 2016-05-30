@@ -37,6 +37,7 @@ function printPerfTiming(){
 }
 if (document.readyState === "complete") { 
     printPerfTiming()
+    window.close();
 } else {
     window.addEventListener('load', printPerfTiming);
     var timeout = 5;
