@@ -38,6 +38,11 @@ If you want to test the data submission code in `submit_to_perfherder.py`, you c
 * Run `test_all.sh`
 * Test results are submitted to https://treeherder.allizom.org/#/jobs?repo=servo
 
+## For Gecko
+
+* Install Firefox Nightly in your PATH
+* Untar the `servo.tar.gz` in `firefox/`, make it `firefox/servo`
+
 # How it works
 
 * The testcase is from tp5, every testcase will run 20 times, and we take the median.
