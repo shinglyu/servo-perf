@@ -79,10 +79,7 @@ def parse_log(log, testcase=None):
                 timing[key] = None if (value == "undefined") else int(value)
         return timing
 
-    if len(blocks) == 0:
-        print("Didn't find any perf data in the log, test timeout?")
-        print("Fillng in a dummy perf data")
-        return [{
+    placeholder = [{
             "navigationStart": 0,
             "unloadEventStart": -1,
             "domLoading": -1,
@@ -106,8 +103,19 @@ def parse_log(log, testcase=None):
             "testcase": testcase,
             "domComplete": -1,
         }]
+
+
+    if len(blocks) == 0:
+        print("Didn't find any perf data in the log, test timeout?")
+        print("Fillng in a dummy perf data")
+        return placeholder
     else:
-        return map(parse_block, blocks)
+        try:
+            return map(parse_block, blocks)
+        except:
+            print("[DEBUG] failed to parse the following log:")
+            print(log)
+            return placeholder
 
 
 def filter_result_by_manifest(result_json, manifest):
