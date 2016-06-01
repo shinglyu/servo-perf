@@ -14,6 +14,7 @@ echo "Running tests"
 python3 runner.py --engine gecko --runs 3 $MANIFEST $PERF_FILE 
 sudo ntpdate tw.pool.ntp.org
 echo "Submitting to Perfherder"
+# XXX: we are using servo's revision to make the graph pretty
 python3 submit_to_perfherder.py --engine gecko $PERF_FILE servo/revision.json
 
 # Kill the http server
