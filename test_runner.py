@@ -164,7 +164,15 @@ Shutting down the Constellation after generating an output file or exit flag spe
 
 
 def test_log_parser_empty():
-    mock_log = b'Nothing here! Test failed!'
+    mock_log = b'''
+[PERF] perf block start
+[PERF]BROKEN!!!!!!!!!1
+[PERF]BROKEN!!!!!!!!!1
+[PERF]BROKEN!!!!!!!!!1
+[PERF]BROKEN!!!!!!!!!1
+[PERF]BROKEN!!!!!!!!!1
+[PERF] perf block end
+'''
     mock_testcase = "http://localhost:8000/page_load_test/56.com/www.56.com/index.html"
 
     expected = [{
@@ -194,6 +202,37 @@ def test_log_parser_empty():
     result = runner.parse_log(mock_log, mock_testcase)
     assert(expected == list(result))
 
+
+def test_log_parser_error():
+    mock_log = b'Nothing here! Test failed!'
+    mock_testcase = "http://localhost:8000/page_load_test/56.com/www.56.com/index.html"
+
+    expected = [{
+        "testcase": "http://localhost:8000/page_load_test/56.com/www.56.com/index.html",
+        "navigationStart": 0,
+        "unloadEventStart": -1,
+        "unloadEventEnd": -1,
+        "redirectStart": -1,
+        "redirectEnd": -1,
+        "fetchStart": -1,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "connectEnd": -1,
+        "secureConnectionStart": -1,
+        "requestStart": -1,
+        "responseStart": -1,
+        "responseEnd": -1,
+        "domLoading": -1,
+        "domInteractive": -1,
+        "domContentLoadedEventStart": -1,
+        "domContentLoadedEventEnd": -1,
+        "domComplete": -1,
+        "loadEventStart": -1,
+        "loadEventEnd": -1
+    }]
+    result = runner.parse_log(mock_log, mock_testcase)
+    assert(expected == list(result))
 
 def test_manifest_loader():
 

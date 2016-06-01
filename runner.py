@@ -67,19 +67,7 @@ def parse_log(log, testcase=None):
         elif copy:
             block.append(line)
 
-    def parse_block(block):
-        timing = {}
-        for line in block:
-            key = line.split(",")[1]
-            value = line.split(",")[2]
-
-            if key == "testcase":
-                timing[key] = value
-            else:
-                timing[key] = None if (value == "undefined") else int(value)
-        return timing
-
-    placeholder = [{
+    placeholder = {
             "navigationStart": 0,
             "unloadEventStart": -1,
             "domLoading": -1,
@@ -102,20 +90,32 @@ def parse_log(log, testcase=None):
             "responseEnd": -1,
             "testcase": testcase,
             "domComplete": -1,
-        }]
+        }
 
+
+    def parse_block(block):
+        timing = {}
+        for line in block:
+            try: 
+                key = line.split(",")[1]
+                value = line.split(",")[2]
+            except:
+                print("[DEBUG] failed to parse the following block:")
+                print(block)
+                return placeholder
+
+            if key == "testcase":
+                timing[key] = value
+            else:
+                timing[key] = None if (value == "undefined") else int(value)
+        return timing
 
     if len(blocks) == 0:
         print("Didn't find any perf data in the log, test timeout?")
         print("Fillng in a dummy perf data")
-        return placeholder
+        return [placeholder]
     else:
-        try:
-            return map(parse_block, blocks)
-        except:
-            print("[DEBUG] failed to parse the following log:")
-            print(log)
-            return placeholder
+        return map(parse_block, blocks)
 
 
 def filter_result_by_manifest(result_json, manifest):
