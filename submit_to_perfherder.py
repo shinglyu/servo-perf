@@ -6,6 +6,7 @@ import random
 import string
 from thclient import (TreeherderClient, TreeherderResultSetCollection,
                       TreeherderJobCollection)
+import time
 
 from runner import format_result_summary
 
@@ -168,6 +169,10 @@ def submit(perf_data, failures, revision, summary, engine):
     author = "{} <{}>".format(revision['author']['name'],
                               revision['author']['email'])
 
+    # XXX: Hack! make gecko data points shown on the same date as it submitted
+    # if (engine == "gecko"):
+    #     revision['author']['timestamp'] = str(int(time.time()))
+
     dataset = [
         {
             # The top-most revision in the list of commits for a push.
@@ -233,9 +238,9 @@ def submit(perf_data, failures, revision, summary, engine):
                 'group_name': group_name,
 
                 # TODO: get the real timing from the test runner
-                'submit_timestamp': revision['author']['timestamp'],
-                'start_timestamp':  revision['author']['timestamp'],
-                'end_timestamp':  revision['author']['timestamp'],
+                'submit_timestamp': str(int(time.time())),
+                'start_timestamp':  str(int(time.time())),
+                'end_timestamp':  str(int(time.time())),
 
                 'state': 'completed',
                 'result': result,  # "success" or "testfailed"
