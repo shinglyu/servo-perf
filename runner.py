@@ -45,7 +45,8 @@ def get_servo_command(url, timeout):
 
 
 def get_gecko_command(url, timeout):
-    test_cmd = ("timeout {timeout}s firefox --no-remote --profile ./firefox/servo {url}"
+    test_cmd = ("timeout {timeout}s ./firefox/firefox/firefox --display=:0 --no-remote -profile ./firefox/servo {url}"
+    # test_cmd = ("timeout {timeout}s ./firefox/firefox/firefox --no-remote -profile ./firefox/servo {url}"
                 .format(timeout=timeout, url=url))
     return test_cmd
 

@@ -45,6 +45,11 @@ If you want to test the data submission code in `submit_to_perfherder.py`, you c
 * Getting commit message: 
   * http://ftp.mozilla.org/pub/firefox/releases/
   * http://hg.mozilla.org/releases/mozilla-release/
+* The first time you run it, you need to use the GUI to setup everything, so enable X11 forwarding if you are running a headless server.
+  * In `about:config`, set `xpinstall.signatures.required` to `false`
+  * Make sure the test addon is ready
+  * Dismiss the "Set as default browser" dialog
+  * Close all resumed tabs
 
 
 # How it works

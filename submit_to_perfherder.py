@@ -206,7 +206,9 @@ def submit(perf_data, failures, revision, summary, engine):
     )
 
     if (engine == "gecko"):
-        project = "mozilla-release"
+        # project = "mozilla-release"
+        # TODO: figure out how to use mozilla-release as project
+        project = "servo"
         job_symbol = 'PLG'
         group_symbol = 'SPG'
         group_name = 'Servo Perf on Gecko'
@@ -332,10 +334,10 @@ def submit(perf_data, failures, revision, summary, engine):
     with open('credential.json', 'r') as f:
         cred = json.load(f)
 
-    client = TreeherderClient(# protocol='https',
-                              # host='treeherder.allizom.org',
-                              protocol='http',
-                              host='local.treeherder.mozilla.org',
+    client = TreeherderClient(protocol='https',
+                              host='treeherder.allizom.org',
+                              # protocol='http',
+                              # host='local.treeherder.mozilla.org',
                               client_id=cred['client_id'],
                               secret=cred['secret'])
 

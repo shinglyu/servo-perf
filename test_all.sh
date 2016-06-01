@@ -17,4 +17,4 @@ echo "Submitting to Perfherder"
 python3 submit_to_perfherder.py $PERF_FILE servo/revision.json
 
 # Kill the http server
-trap 'kill $(jobs -pr)' SIGINT SIGTERM EXIT
+# trap 'kill $(jobs -pr)' SIGINT SIGTERM EXIT
