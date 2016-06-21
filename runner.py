@@ -96,7 +96,7 @@ def parse_log(log, testcase=None):
     def parse_block(block):
         timing = {}
         for line in block:
-            try: 
+            try:
                 key = line.split(",")[1]
                 value = line.split(",")[2]
             except:
@@ -108,6 +108,10 @@ def parse_log(log, testcase=None):
                 timing[key] = value
             else:
                 timing[key] = None if (value == "undefined") else int(value)
+
+        if testcase is not None and timing['testcase'] != testcase:
+            return placeholder
+
         return timing
 
     if len(blocks) == 0:
