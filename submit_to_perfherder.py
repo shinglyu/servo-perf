@@ -18,12 +18,13 @@ def geometric_mean(iterable):
 
 def format_testcase_name(name):
     temp = name.replace('http://localhost:8000/page_load_test/', '')
+    temp = temp.replace('http://localhost:8000/tp6/', '')
     temp = temp.split('/')[0]
     temp = temp[0:80]
     return temp
 
 
-def format_perf_data(perf_json, engine):
+def format_perf_data(perf_json, engine='servo'):
     suites = []
     measurement = "domComplete"  # Change this to an array when we have more
 
