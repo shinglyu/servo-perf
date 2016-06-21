@@ -102,6 +102,10 @@ def parse_log(log, testcase=None):
             except:
                 print("[DEBUG] failed to parse the following block:")
                 print(block)
+                print('[DEBUG] log:')
+                print('-----')
+                print(log)
+                print('-----')
                 return placeholder
 
             if key == "testcase":
@@ -110,6 +114,10 @@ def parse_log(log, testcase=None):
                 timing[key] = None if (value == "undefined") else int(value)
 
         if testcase is not None and timing['testcase'] != testcase:
+            print('[DEBUG] log:')
+            print('-----')
+            print(log)
+            print('-----')
             return placeholder
 
         return timing
@@ -117,6 +125,11 @@ def parse_log(log, testcase=None):
     if len(blocks) == 0:
         print("Didn't find any perf data in the log, test timeout?")
         print("Fillng in a dummy perf data")
+        print('[DEBUG] log:')
+        print('-----')
+        print(log)
+        print('-----')
+
         return [placeholder]
     else:
         return map(parse_block, blocks)
