@@ -1,4 +1,5 @@
 import runner
+import pytest
 
 
 def test_log_parser():
@@ -330,11 +331,24 @@ def test_filter_result_by_manifest():
 
     manifest = [
         "http://localhost:8000/page_load_test/56.com/www.56.com/index.html",
-        "http://localhost:8000/page_load_test/5566.com/www.5566.com/index.html"
     ]
 
     assert(expected == runner.filter_result_by_manifest(input_json, manifest))
 
+def test_filter_result_by_manifest_error():
+    input_json = [{
+        "testcase": "1.html",
+        "domComplete": 1460358389000,
+    }]
+
+    manifest = [
+        "1.html",
+        "2.html"
+    ]
+
+    with pytest.raises(Exception) as execinfo:
+        runner.filter_result_by_manifest(input_json, manifest)
+    assert "Missing test result" in str(execinfo.value)
 
 def test_take_result_median_odd():
     input_json = [{

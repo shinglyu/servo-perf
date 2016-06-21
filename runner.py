@@ -138,7 +138,13 @@ def parse_log(log, testcase=None):
 def filter_result_by_manifest(result_json, manifest):
     # print(manifest)
     # print(result_json)
-    return [tc for tc in result_json if tc['testcase'] in manifest]
+    filtered = []
+    for name in manifest:
+        match = [tc for tc in result_json if tc['testcase'] == name]
+        if len(match) == 0:
+            raise Exception("Missing test result: {}. This will cause a discontinuity in the treeherder graph, so we won't submit this data.".format(name))
+        filtered += match
+    return filtered
 
 
 def take_result_median(result_json, expected_runs):
