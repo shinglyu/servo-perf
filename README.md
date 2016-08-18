@@ -1,6 +1,12 @@
 Servo Page Load Time Test
 ==============
 
+# MOVED!
+# This test is merged into the servo/servo repository. Please go to 
+# [https://github.com/servo/servo/tree/master/etc/ci/performance](https://github.com/servo/servo/tree/master/etc/ci/performance)
+
+## Everything below this line is deprecated
+---------------------------------------
 [Tracking Bug](https://github.com/servo/servo/issues/10452)
 
 # Prerequisite
@@ -76,3 +82,4 @@ The following tests can be run by `python -m pytest <filename>`:
 * `test_runner.py`
 * `test_submit_to_perfherder.py`
 
+>>>
