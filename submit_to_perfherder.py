@@ -334,13 +334,13 @@ def submit(perf_data, failures, revision, summary, engine):
     tjc = create_job_collection(dataset)
 
     # TODO: extract this read credential code out of this function.
+    # And use environment variables for secrets:
+    # http://12factor.net/config
     with open('credential.json', 'r') as f:
         cred = json.load(f)
 
-    client = TreeherderClient(protocol='https',
-                              host='treeherder.allizom.org',
-                              # protocol='http',
-                              # host='local.treeherder.mozilla.org',
+    client = TreeherderClient(server_url='https://treeherder.allizom.org',
+                              # server_url='http://local.treeherder.mozilla.org',
                               client_id=cred['client_id'],
                               secret=cred['secret'])
 
@@ -353,7 +353,7 @@ def submit(perf_data, failures, revision, summary, engine):
 def main():
     parser = argparse.ArgumentParser(
         description=("Submit Servo performance data to Perfherder. "
-                     "Put your treeherder credentail in credentail.json. "
+                     "Put your Treeherder credential in credential.json. "
                      "You can refer to credential.json.example.")
     )
     parser.add_argument("perf_json",
