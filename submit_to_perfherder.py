@@ -311,12 +311,6 @@ def submit(perf_data, failures, revision, summary, engine):
                         "blob": {
                             "job_details": [
                                 {
-                                    "content_type": "link",
-                                    "url": "https://www.github.com/servo/servo",
-                                    "value": "GitHub",
-                                    "title": "Source code"
-                                },
-                                {
                                     "content_type": "raw_html",
                                     "title": "Result Summary",
                                     "value": summary
